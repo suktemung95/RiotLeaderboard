@@ -11,6 +11,7 @@ public class Player {
     private String gameName;
     private String tagLine;
     private String region;
+    @Column(unique = true, nullable = false)
     private String puuid;
 
     public void setGameName(String gameName) {

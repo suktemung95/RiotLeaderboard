@@ -36,14 +36,22 @@ public class PlayerService {
         RiotAccountResponse riotAccount =
                 riotApiService.getAccount(request.gameName(), request.tagLine());
 
-        Player player = new Player();
+        Player player;
 
+        Optional<Player> optionalPlayer = playerRepository.findByPuuid(riotAccount.puuid());
+
+        if ( optionalPlayer.isPresent() ) {
+            player = optionalPlayer.get();
+        } else {
+            player = new Player();
+            player.setPuuid(riotAccount.puuid());
+        }
+
+        // refresh gameName and tagLine and region
         player.setGameName(riotAccount.gameName());
         player.setTagLine(riotAccount.tagLine());
         player.setRegion(request.region());
-        player.setPuuid(riotAccount.puuid());
 
-        // future: check to make sure the player doesn't already exist
 
         Player savedPlayer = playerRepository.save(player);
 
