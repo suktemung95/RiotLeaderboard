@@ -1,22 +1,34 @@
 package com.licky.riotleaderboard.service;
 
 import com.licky.riotleaderboard.dto.AddPlayerRequest;
+import com.licky.riotleaderboard.dto.PlayerResponse;
 import com.licky.riotleaderboard.dto.RiotAccountResponse;
+import com.licky.riotleaderboard.dto.RiotRankResponse;
 import com.licky.riotleaderboard.model.Player;
+import com.licky.riotleaderboard.model.RankSnapshot;
 import com.licky.riotleaderboard.repository.PlayerRepository;
+import com.licky.riotleaderboard.repository.RankSnapshotRepository;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
+    private final RankSnapshotRepository rankSnapshotRepository;
     private final RiotApiService riotApiService;
 
     public PlayerService(
             PlayerRepository playerRepository,
+            RankSnapshotRepository rankSnapshotRepository,
             RiotApiService riotApiService
     ) {
         this.playerRepository = playerRepository;
+        this.rankSnapshotRepository = rankSnapshotRepository;
         this.riotApiService = riotApiService;
     }
 
@@ -31,6 +43,63 @@ public class PlayerService {
         player.setRegion(request.region());
         player.setPuuid(riotAccount.puuid());
 
-        return playerRepository.save(player);
+        // future: check to make sure the player doesn't already exist
+
+        Player savedPlayer = playerRepository.save(player);
+
+        List<RiotRankResponse> rankedStats =
+                riotApiService.getRankedStats(
+                        savedPlayer.getPuuid(),
+                        savedPlayer.getRegion()
+                );
+
+        rankedStats.stream()
+                .filter(rank -> rank.queueType().equals("RANKED_SOLO_5x5"))
+                .findFirst()
+                .ifPresent(rank -> {
+                    RankSnapshot snapshot = new RankSnapshot();
+
+                    snapshot.setPlayer(savedPlayer);
+                    snapshot.setTier(rank.tier());
+                    snapshot.setRank(rank.rank());
+                    snapshot.setLeaguePoints(rank.leaguePoints());
+                    snapshot.setWins(rank.wins());
+                    snapshot.setLosses(rank.losses());
+                    snapshot.setRecordedAt(LocalDateTime.now());
+
+                    rankSnapshotRepository.save(snapshot);
+                });
+
+        return savedPlayer;
+    }
+
+    public List<PlayerResponse> getLeaderboard() {
+        List<Player> players = playerRepository.findAll();
+
+        List<PlayerResponse> responses = new ArrayList<>();
+
+        for (Player player : players) {
+            Optional<RankSnapshot> latestSnapshot =
+                    rankSnapshotRepository
+                            .findTopByPlayerOrderByRecordedAtDesc(player);
+
+            if ( latestSnapshot.isPresent() ){
+                RankSnapshot rankSnapshot = latestSnapshot.get();
+                PlayerResponse response = new PlayerResponse(
+                        player.getGameName(),
+                        player.getTagLine(),
+                        player.getRegion(),
+                        rankSnapshot.getTier(),
+                        rankSnapshot.getRank(),
+                        rankSnapshot.getLeaguePoints(),
+                        rankSnapshot.getWins(),
+                        rankSnapshot.getLosses()
+                );
+
+                responses.add(response);
+            }
+        }
+
+        return responses;
     }
 }

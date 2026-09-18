@@ -1,12 +1,12 @@
 package com.licky.riotleaderboard.controller;
 
 import com.licky.riotleaderboard.dto.AddPlayerRequest;
+import com.licky.riotleaderboard.dto.PlayerResponse;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.service.PlayerService;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/players")
@@ -21,5 +21,10 @@ public class PlayerController {
     @PostMapping
     public Player addPlayer(@RequestBody AddPlayerRequest request) {
         return playerService.addPlayer(request);
+    }
+
+    @GetMapping
+    public List<PlayerResponse> getPlayers() {
+        return playerService.getLeaderboard();
     }
 }

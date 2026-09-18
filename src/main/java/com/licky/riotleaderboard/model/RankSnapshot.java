@@ -20,4 +20,63 @@ public class RankSnapshot {
     private Integer losses;
     private LocalDateTime recordedAt;
 
+    public Long getId() {
+        return id;
+    }
+
+    public Player getPlayer() {
+        return player;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
+    }
+
+    public String getTier() {
+        return tier;
+    }
+
+    public void setTier(String tier) {
+        this.tier = tier;
+    }
+
+    public String getRank() {
+        return rank;
+    }
+
+    public void setRank(String rank) {
+        this.rank = rank;
+    }
+
+    public Integer getLeaguePoints() {
+        return leaguePoints;
+    }
+
+    public void setLeaguePoints(Integer leaguePoints) {
+        this.leaguePoints = leaguePoints;
+    }
+
+    public Integer getWins() {
+        return wins;
+    }
+
+    public void setWins(Integer wins) {
+        this.wins = wins;
+    }
+
+    public Integer getLosses() {
+        return losses;
+    }
+
+    public void setLosses(Integer losses) {
+        this.losses = losses;
+    }
+
+    public LocalDateTime getRecordedAt() {
+        return recordedAt;
+    }
+
+    public void setRecordedAt(LocalDateTime recordedAt) {
+        this.recordedAt = recordedAt;
+    }
 }
