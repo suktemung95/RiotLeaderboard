@@ -6,6 +6,8 @@ import com.licky.riotleaderboard.dto.PlayerResponse;
 import com.licky.riotleaderboard.dto.RankSnapshotResponse;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.service.PlayerService;
+import com.licky.riotleaderboard.util.ApiResponses;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,22 +24,34 @@ public class PlayerController {
     }
 
     @PostMapping
-    public Player addPlayer(@RequestBody AddPlayerRequest request) {
-        return playerService.addPlayer(request);
+    public ResponseEntity<ApiResponse<Player>> addPlayer(@RequestBody AddPlayerRequest request) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                "success",
+                "Added player",
+                playerService.addPlayer(request)
+        );
     }
 
     @GetMapping
-    public List<PlayerResponse> getPlayers() {
-        return playerService.getLeaderboard();
+    public ResponseEntity<ApiResponse<List<PlayerResponse>>> getPlayers() {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                "success",
+                "Retrieved all players",
+                playerService.getLeaderboard()
+        );
     }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(@RequestParam Long id) {
-        return ResponseEntity.ok(
-                ApiResponse.success(
-                        "Retrieved player history",
-                        playerService.getPlayerHistory(id)
-                )
+        return ApiResponses.build(
+                HttpStatus.OK,
+                "success",
+                "Retrieved player history",
+                playerService.getPlayerHistory(id)
         );
     }
+
+
 }

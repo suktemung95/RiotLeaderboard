@@ -1,6 +1,7 @@
 package com.licky.riotleaderboard.exception;
 
 import com.licky.riotleaderboard.dto.ApiResponse;
+import com.licky.riotleaderboard.util.ApiResponses;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,14 +14,11 @@ public class GlobalExceptionHandler extends RuntimeException {
     public ResponseEntity<ApiResponse<Void>> handlePlayerNotFound(
             PlayerNotFoundException ex
     ) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(
-                        ApiResponse.error(
-                                ex.getMessage(),
-                                null
-                        )
-                );
+        return ApiResponses.build(
+                HttpStatus.NOT_FOUND,
+                "error",
+                ex.getMessage(),
+                null
+        );
     }
-
-
 }
