@@ -1,13 +1,12 @@
 package com.licky.riotleaderboard.service;
 
-import com.licky.riotleaderboard.dto.AddPlayerRequest;
-import com.licky.riotleaderboard.dto.PlayerResponse;
-import com.licky.riotleaderboard.dto.RiotAccountResponse;
-import com.licky.riotleaderboard.dto.RiotRankResponse;
+import com.licky.riotleaderboard.dto.*;
+import com.licky.riotleaderboard.exception.PlayerNotFoundException;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.model.RankSnapshot;
 import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -109,5 +108,24 @@ public class PlayerService {
         }
 
         return responses;
+    }
+
+    public List<RankSnapshotResponse> getPlayerHistory(Long id) {
+
+         Player player = playerRepository.findById(id)
+                 .orElseThrow(() -> new PlayerNotFoundException(id));
+
+         return rankSnapshotRepository
+                 .findByPlayerOrderByRecordedAtDesc(player)
+                 .stream()
+                 .map(s -> new RankSnapshotResponse(
+                         s.getTier(),
+                         s.getRank(),
+                         s.getLeaguePoints(),
+                         s.getWins(),
+                         s.getLosses(),
+                         s.getRecordedAt()
+                 ))
+                 .toList();
     }
 }
