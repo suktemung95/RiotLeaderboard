@@ -15,8 +15,7 @@ public class GlobalExceptionHandler extends RuntimeException {
     ) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(
-                        new ApiResponse<>(
-                                "error",
+                        ApiResponse.error(
                                 ex.getMessage(),
                                 null
                         )
