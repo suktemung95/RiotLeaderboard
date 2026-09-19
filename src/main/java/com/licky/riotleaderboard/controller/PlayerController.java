@@ -43,13 +43,23 @@ public class PlayerController {
         );
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(@RequestParam Long id) {
+    @GetMapping("/{id}/history")
+    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(@PathVariable Long id) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 "success",
                 "Retrieved player history",
                 playerService.getPlayerHistory(id)
+        );
+    }
+
+    @PostMapping("/{id}/refresh")
+    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayer(@PathVariable Long id) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                "success",
+                "Refreshed player rank snapshot",
+                playerService.refreshPlayer(id)
         );
     }
 

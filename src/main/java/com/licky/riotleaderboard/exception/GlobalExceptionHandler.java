@@ -21,4 +21,16 @@ public class GlobalExceptionHandler extends RuntimeException {
                 null
         );
     }
+
+    @ExceptionHandler(SoloDuoRankNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSoloDuoRankNotFound(
+            SoloDuoRankNotFoundException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.NOT_FOUND,
+                "error",
+                ex.getMessage(),
+                null
+        );
+    }
 }

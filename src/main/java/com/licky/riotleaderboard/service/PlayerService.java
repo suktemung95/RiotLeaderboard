@@ -2,6 +2,7 @@ package com.licky.riotleaderboard.service;
 
 import com.licky.riotleaderboard.dto.*;
 import com.licky.riotleaderboard.exception.PlayerNotFoundException;
+import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.model.RankSnapshot;
 import com.licky.riotleaderboard.repository.PlayerRepository;
@@ -54,28 +55,8 @@ public class PlayerService {
 
         Player savedPlayer = playerRepository.save(player);
 
-        List<RiotRankResponse> rankedStats =
-                riotApiService.getRankedStats(
-                        savedPlayer.getPuuid(),
-                        savedPlayer.getRegion()
-                );
-
-        rankedStats.stream()
-                .filter(rank -> rank.queueType().equals("RANKED_SOLO_5x5"))
-                .findFirst()
-                .ifPresent(rank -> {
-                    RankSnapshot snapshot = new RankSnapshot();
-
-                    snapshot.setPlayer(savedPlayer);
-                    snapshot.setTier(rank.tier());
-                    snapshot.setRank(rank.rank());
-                    snapshot.setLeaguePoints(rank.leaguePoints());
-                    snapshot.setWins(rank.wins());
-                    snapshot.setLosses(rank.losses());
-                    snapshot.setRecordedAt(LocalDateTime.now());
-
-                    rankSnapshotRepository.save(snapshot);
-                });
+        getSoloDuoRank(savedPlayer.getPuuid(), savedPlayer.getRegion())
+            .ifPresent(rank -> saveRankSnapshot(savedPlayer, rank));
 
         return savedPlayer;
     }
@@ -127,5 +108,53 @@ public class PlayerService {
                          s.getRecordedAt()
                  ))
                  .toList();
+    }
+
+    public RankSnapshotResponse refreshPlayer(Long id) {
+        Player player = playerRepository.findById(id)
+                .orElseThrow(() -> new PlayerNotFoundException(id));
+
+        return getSoloDuoRank(player.getPuuid(), player.getRegion())
+            .map(rank -> saveRankSnapshot(player, rank))
+            .map(this::toRankSnapshotResponse)
+            .orElseThrow(() -> new SoloDuoRankNotFoundException(id));
+    }
+
+    private RankSnapshot saveRankSnapshot(
+            Player player,
+            RiotRankResponse rank
+    ) {
+        RankSnapshot snapshot = new RankSnapshot();
+
+        snapshot.setPlayer(player);
+        snapshot.setTier(rank.tier());
+        snapshot.setRank(rank.rank());
+        snapshot.setLeaguePoints(rank.leaguePoints());
+        snapshot.setWins(rank.wins());
+        snapshot.setLosses(rank.losses());
+        snapshot.setRecordedAt(LocalDateTime.now());
+
+        return rankSnapshotRepository.save(snapshot);
+    }
+
+    private RankSnapshotResponse toRankSnapshotResponse(RankSnapshot snapshot) {
+        return new RankSnapshotResponse(
+                snapshot.getTier(),
+                snapshot.getRank(),
+                snapshot.getLeaguePoints(),
+                snapshot.getWins(),
+                snapshot.getLosses(),
+                snapshot.getRecordedAt()
+        );
+    }
+
+    private Optional<RiotRankResponse> getSoloDuoRank(String puuid, String region) {
+        return riotApiService.getRankedStats(
+                        puuid,
+                        region
+                )
+                .stream()
+                .filter(rank -> rank.queueType().equals("RANKED_SOLO_5x5"))
+                .findFirst();
     }
 }
