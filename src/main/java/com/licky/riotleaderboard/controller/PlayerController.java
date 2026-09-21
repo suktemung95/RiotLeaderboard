@@ -62,6 +62,4 @@ public class PlayerController {
                 playerService.refreshPlayer(id)
         );
     }
-
-
 }

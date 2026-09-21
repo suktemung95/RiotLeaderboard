@@ -8,11 +8,13 @@ import com.licky.riotleaderboard.model.RankSnapshot;
 import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -110,6 +112,12 @@ public class PlayerService {
                  .toList();
     }
 
+    public RankSnapshot getLatestRankSnapshot(Player player) {
+        return rankSnapshotRepository
+                .findTopByPlayerOrderByRecordedAtDesc(player)
+                .orElse(null);
+    }
+
     public RankSnapshotResponse refreshPlayer(Long id) {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));
@@ -156,5 +164,49 @@ public class PlayerService {
                 .stream()
                 .filter(rank -> rank.queueType().equals("RANKED_SOLO_5x5"))
                 .findFirst();
+    }
+
+    @Scheduled(fixedRate = 900000)
+    public void refreshAll() {
+        List<Player> players = playerRepository.findAll();
+        List<String> errors = new ArrayList<>();
+
+        for (Player player : players) {
+
+            try {
+                refreshPlayerIfChanged(player);
+            } catch (Exception e) {
+                errors.add(e.getMessage());
+            }
+        }
+
+        System.out.println(errors);
+    }
+
+    private void refreshPlayerIfChanged(Player player) {
+        RiotRankResponse newRank =
+                getSoloDuoRank(player.getPuuid(), player.getRegion())
+                        .orElseThrow(
+                                () -> new SoloDuoRankNotFoundException(player.getId())
+                        );
+
+        RankSnapshot latestRankSnapshot = getLatestRankSnapshot(player);
+
+        if (
+                latestRankSnapshot == null
+                || isRankChanged(latestRankSnapshot, newRank)
+        ) {
+            saveRankSnapshot(player, newRank);
+        }
+    }
+
+    private boolean isRankChanged(
+            RankSnapshot latestRankSnapshot,
+            RiotRankResponse newRank) {
+        return (
+                !Objects.equals(newRank.tier(), latestRankSnapshot.getTier()) ||
+                !Objects.equals(newRank.rank(), latestRankSnapshot.getRank()) ||
+                !Objects.equals(newRank.leaguePoints(), latestRankSnapshot.getLeaguePoints())
+        );
     }
 }
