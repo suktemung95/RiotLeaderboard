@@ -12,10 +12,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class PlayerService {
@@ -89,6 +86,19 @@ public class PlayerService {
                 responses.add(response);
             }
         }
+
+        responses.sort(
+                Comparator.comparingInt(
+                                (PlayerResponse response) -> tierValue(response.tier())
+                        )
+                        .thenComparingInt(
+                                response -> rankValue(response.rank())
+                        )
+                        .thenComparingInt(
+                                PlayerResponse::leaguePoints
+                        )
+                        .reversed()
+        );
 
         return responses;
     }
@@ -208,5 +218,31 @@ public class PlayerService {
                 !Objects.equals(newRank.rank(), latestRankSnapshot.getRank()) ||
                 !Objects.equals(newRank.leaguePoints(), latestRankSnapshot.getLeaguePoints())
         );
+    }
+
+    private int tierValue(String tier) {
+        return switch (tier.toUpperCase()) {
+            case "IRON" -> 1;
+            case "BRONZE" -> 2;
+            case "SILVER" -> 3;
+            case "GOLD" -> 4;
+            case "PLATINUM" -> 5;
+            case "EMERALD" -> 6;
+            case "DIAMOND" -> 7;
+            case "MASTER" -> 8;
+            case "GRANDMASTER" -> 9;
+            case "CHALLENGER" -> 10;
+            default -> 0;
+        };
+    }
+
+    private int rankValue(String rank) {
+        return switch (rank.toUpperCase()) {
+            case "IV" -> 1;
+            case "III" -> 2;
+            case "II" -> 3;
+            case "I" -> 4;
+            default -> 0;
+        };
     }
 }
