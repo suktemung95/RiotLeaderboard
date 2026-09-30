@@ -1,1 +1,3 @@
 - reformat API calls into wrapper for simplicity
+- get match(es history)
+- caching players
