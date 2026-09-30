@@ -33,4 +33,16 @@ public class GlobalExceptionHandler extends RuntimeException {
                 null
         );
     }
+
+    @ExceptionHandler(InvalidRiotApiTokenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRiotApiTokenException (
+            InvalidRiotApiTokenException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "error",
+                ex.getMessage(),
+                null
+        );
+    }
 }

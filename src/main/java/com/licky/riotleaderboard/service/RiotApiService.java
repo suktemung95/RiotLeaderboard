@@ -2,8 +2,10 @@ package com.licky.riotleaderboard.service;
 
 import com.licky.riotleaderboard.dto.RiotAccountResponse;
 import com.licky.riotleaderboard.dto.RiotRankResponse;
+import com.licky.riotleaderboard.exception.InvalidRiotApiTokenException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -47,6 +49,12 @@ public class RiotApiService {
                 )
                 .header("X-Riot-Token", apiKey)
                 .retrieve()
+                .onStatus(
+                        status -> status.value() == 401,
+                        (req, res) -> {
+                            throw new InvalidRiotApiTokenException();
+                        }
+                )
                 .body(new ParameterizedTypeReference<List<RiotRankResponse>>() {});
 
     }
