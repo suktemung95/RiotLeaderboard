@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends RuntimeException {
 
-    @ExceptionHandler(PlayerNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handlePlayerNotFound(
-            PlayerNotFoundException ex
+    @ExceptionHandler(PlayerNotFoundByIdException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePlayerNotFoundById(
+            PlayerNotFoundByIdException ex
     ) {
         return ApiResponses.build(
                 HttpStatus.NOT_FOUND,
@@ -40,6 +40,18 @@ public class GlobalExceptionHandler extends RuntimeException {
     ) {
         return ApiResponses.build(
                 HttpStatus.INTERNAL_SERVER_ERROR,
+                "error",
+                ex.getMessage(),
+                null
+        );
+    }
+
+    @ExceptionHandler(PlayerNotFoundByNameException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePlayerNotFoundByName(
+            PlayerNotFoundByNameException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.NOT_FOUND,
                 "error",
                 ex.getMessage(),
                 null

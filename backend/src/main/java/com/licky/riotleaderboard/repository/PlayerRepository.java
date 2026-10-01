@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface PlayerRepository extends JpaRepository<Player, Long> {
     boolean existsByPuuid(String puuid);
     Optional<Player> findByPuuid(String puuid);
+    Optional<Player> findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(String region, String gameName, String tagLine);
 }

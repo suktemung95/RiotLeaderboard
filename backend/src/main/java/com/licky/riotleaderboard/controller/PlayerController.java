@@ -1,8 +1,8 @@
 package com.licky.riotleaderboard.controller;
 
-import com.licky.riotleaderboard.dto.AddPlayerRequest;
-import com.licky.riotleaderboard.dto.ApiResponse;
 import com.licky.riotleaderboard.dto.PlayerResponse;
+import com.licky.riotleaderboard.dto.ApiResponse;
+import com.licky.riotleaderboard.dto.PlayerRankResponse;
 import com.licky.riotleaderboard.dto.RankSnapshotResponse;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.service.PlayerService;
@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@CrossOrigin(origins = "http://localhost:5173")
 @RequestMapping("/players")
 public class PlayerController {
 
@@ -24,7 +25,7 @@ public class PlayerController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Player>> addPlayer(@RequestBody AddPlayerRequest request) {
+    public ResponseEntity<ApiResponse<Player>> addPlayer(@RequestBody PlayerResponse request) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 "success",
@@ -34,12 +35,27 @@ public class PlayerController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PlayerResponse>>> getPlayers() {
+    public ResponseEntity<ApiResponse<List<PlayerRankResponse>>> getPlayers() {
         return ApiResponses.build(
                 HttpStatus.OK,
                 "success",
                 "Retrieved all players",
                 playerService.getLeaderboard()
+        );
+    }
+
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PlayerResponse>> searchPlayer(
+            @RequestParam String region,
+            @RequestParam String gameName,
+            @RequestParam String tagLine
+    ) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                "success",
+                "retrieved player",
+                playerService.getPlayerByName(region, gameName, tagLine)
         );
     }
 

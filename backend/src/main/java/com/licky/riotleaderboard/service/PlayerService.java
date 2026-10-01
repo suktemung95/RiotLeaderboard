@@ -1,13 +1,13 @@
 package com.licky.riotleaderboard.service;
 
 import com.licky.riotleaderboard.dto.*;
-import com.licky.riotleaderboard.exception.PlayerNotFoundException;
+import com.licky.riotleaderboard.exception.PlayerNotFoundByIdException;
+import com.licky.riotleaderboard.exception.PlayerNotFoundByNameException;
 import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.model.RankSnapshot;
 import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,7 @@ public class PlayerService {
         this.riotApiService = riotApiService;
     }
 
-    public Player addPlayer(AddPlayerRequest request) {
+    public Player addPlayer(PlayerResponse request) {
         RiotAccountResponse riotAccount =
                 riotApiService.getAccount(request.gameName(), request.tagLine());
 
@@ -60,10 +60,10 @@ public class PlayerService {
         return savedPlayer;
     }
 
-    public List<PlayerResponse> getLeaderboard() {
+    public List<PlayerRankResponse> getLeaderboard() {
         List<Player> players = playerRepository.findAll();
 
-        List<PlayerResponse> responses = new ArrayList<>();
+        List<PlayerRankResponse> responses = new ArrayList<>();
 
         for (Player player : players) {
             Optional<RankSnapshot> latestSnapshot =
@@ -72,7 +72,7 @@ public class PlayerService {
 
             if ( latestSnapshot.isPresent() ){
                 RankSnapshot rankSnapshot = latestSnapshot.get();
-                PlayerResponse response = new PlayerResponse(
+                PlayerRankResponse response = new PlayerRankResponse(
                         player.getGameName(),
                         player.getTagLine(),
                         player.getRegion(),
@@ -89,13 +89,13 @@ public class PlayerService {
 
         responses.sort(
                 Comparator.comparingInt(
-                                (PlayerResponse response) -> tierValue(response.tier())
+                                (PlayerRankResponse response) -> tierValue(response.tier())
                         )
                         .thenComparingInt(
                                 response -> rankValue(response.rank())
                         )
                         .thenComparingInt(
-                                PlayerResponse::leaguePoints
+                                PlayerRankResponse::leaguePoints
                         )
                         .reversed()
         );
@@ -106,7 +106,7 @@ public class PlayerService {
     public List<RankSnapshotResponse> getPlayerHistory(Long id) {
 
          Player player = playerRepository.findById(id)
-                 .orElseThrow(() -> new PlayerNotFoundException(id));
+                 .orElseThrow(() -> new PlayerNotFoundByIdException(id));
 
          return rankSnapshotRepository
                  .findByPlayerOrderByRecordedAtDesc(player)
@@ -122,6 +122,16 @@ public class PlayerService {
                  .toList();
     }
 
+    public PlayerResponse getPlayerByName(String region, String gameName, String tagLine) {
+        Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+                region, gameName, tagLine
+        )
+                .orElseThrow(() -> new PlayerNotFoundByNameException(region, gameName, tagLine));
+
+
+        return playerToResponse(player);
+    }
+
     public RankSnapshot getLatestRankSnapshot(Player player) {
         return rankSnapshotRepository
                 .findTopByPlayerOrderByRecordedAtDesc(player)
@@ -130,7 +140,7 @@ public class PlayerService {
 
     public RankSnapshotResponse refreshPlayer(Long id) {
         Player player = playerRepository.findById(id)
-                .orElseThrow(() -> new PlayerNotFoundException(id));
+                .orElseThrow(() -> new PlayerNotFoundByIdException(id));
 
         return getSoloDuoRank(player.getPuuid(), player.getRegion())
             .map(rank -> saveRankSnapshot(player, rank))
@@ -138,10 +148,7 @@ public class PlayerService {
             .orElseThrow(() -> new SoloDuoRankNotFoundException(id));
     }
 
-    private RankSnapshot saveRankSnapshot(
-            Player player,
-            RiotRankResponse rank
-    ) {
+    private RankSnapshot saveRankSnapshot(Player player, RiotRankResponse rank) {
         RankSnapshot snapshot = new RankSnapshot();
 
         snapshot.setPlayer(player);
@@ -244,5 +251,13 @@ public class PlayerService {
             case "I" -> 4;
             default -> 0;
         };
+    }
+
+    private PlayerResponse playerToResponse(Player player) {
+        return new PlayerResponse(
+                player.getGameName(),
+                player.getTagLine(),
+                player.getRegion()
+        );
     }
 }
