@@ -25,9 +25,9 @@ export default function HomePage() {
         }
 
         const params = new URLSearchParams({
-        region,
-        gameName,
-        tagLine
+            region,
+            gameName,
+            tagLine
         })
 
         const url = URL_BASE + `players/search?${params}` 

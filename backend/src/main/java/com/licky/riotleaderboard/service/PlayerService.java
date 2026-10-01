@@ -3,6 +3,7 @@ package com.licky.riotleaderboard.service;
 import com.licky.riotleaderboard.dto.*;
 import com.licky.riotleaderboard.exception.PlayerNotFoundByIdException;
 import com.licky.riotleaderboard.exception.PlayerNotFoundByNameException;
+import com.licky.riotleaderboard.exception.RankSnapshotNotFoundException;
 import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.model.RankSnapshot;
@@ -207,7 +208,9 @@ public class PlayerService {
                                 () -> new SoloDuoRankNotFoundException(player.getId())
                         );
 
-        RankSnapshot latestRankSnapshot = getLatestRankSnapshot(player);
+        RankSnapshot latestRankSnapshot = rankSnapshotRepository
+                .findTopByPlayerOrderByRecordedAtDesc(player)
+                .orElseThrow(() -> new RankSnapshotNotFoundException(player.getId()));
 
         if (
                 latestRankSnapshot == null
@@ -259,5 +262,37 @@ public class PlayerService {
                 player.getTagLine(),
                 player.getRegion()
         );
+    }
+
+    private RankSnapshotResponse rankSnapshotToResponse(RankSnapshot snapshot) {
+        return new RankSnapshotResponse(
+                snapshot.getTier(),
+                snapshot.getRank(),
+                snapshot.getLeaguePoints(),
+                snapshot.getWins(),
+                snapshot.getLosses(),
+                snapshot.getRecordedAt()
+        );
+    }
+
+    public PlayerOverviewResponse getPlayerOverview(
+            PlayerRequest playerRequest
+    ) {
+        Player p = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+                playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
+        )
+                .orElseThrow(() -> new PlayerNotFoundByNameException(
+                        playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
+                ));
+
+        RankSnapshot rs = rankSnapshotRepository
+                .findTopByPlayerOrderByRecordedAtDesc(p)
+                .orElseThrow(() -> new RankSnapshotNotFoundException(p.getId()));
+
+        PlayerResponse pr = playerToResponse(p);
+        RankSnapshotResponse rsr = rankSnapshotToResponse(rs);
+
+        return new PlayerOverviewResponse(pr, rsr);
+
     }
 }

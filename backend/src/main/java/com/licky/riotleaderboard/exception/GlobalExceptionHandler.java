@@ -57,4 +57,16 @@ public class GlobalExceptionHandler extends RuntimeException {
                 null
         );
     }
+
+    @ExceptionHandler(RankSnapshotNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRankSnapshotNotFoundException(
+            RankSnapshotNotFoundException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.NOT_FOUND,
+                false,
+                ex.getMessage(),
+                null
+        );
+    }
 }

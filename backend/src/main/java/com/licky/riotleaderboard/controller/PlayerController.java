@@ -1,9 +1,6 @@
 package com.licky.riotleaderboard.controller;
 
-import com.licky.riotleaderboard.dto.PlayerResponse;
-import com.licky.riotleaderboard.dto.ApiResponse;
-import com.licky.riotleaderboard.dto.PlayerRankResponse;
-import com.licky.riotleaderboard.dto.RankSnapshotResponse;
+import com.licky.riotleaderboard.dto.*;
 import com.licky.riotleaderboard.model.Player;
 import com.licky.riotleaderboard.service.PlayerService;
 import com.licky.riotleaderboard.util.ApiResponses;
@@ -47,20 +44,20 @@ public class PlayerController {
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PlayerResponse>> searchPlayer(
-            @RequestParam String region,
-            @RequestParam String gameName,
-            @RequestParam String tagLine
+            @ModelAttribute PlayerRequest pr
     ) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
                 "retrieved player",
-                playerService.getPlayerByName(region, gameName, tagLine)
+                playerService.getPlayerByName(pr.region(), pr.gameName(), pr.tagLine())
         );
     }
 
     @GetMapping("/{id}/history")
-    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
+            @PathVariable Long id
+    ) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
@@ -76,6 +73,18 @@ public class PlayerController {
                 true,
                 "Refreshed player rank snapshot",
                 playerService.refreshPlayer(id)
+        );
+    }
+
+    @GetMapping("/overview")
+    public ResponseEntity<ApiResponse<PlayerOverviewResponse>> getPlayerOverview(
+            @ModelAttribute PlayerRequest playerRequest
+    ) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "Player overview retrieved",
+                playerService.getPlayerOverview(playerRequest)
         );
     }
 }
