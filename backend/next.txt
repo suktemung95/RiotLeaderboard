@@ -1,3 +1,6 @@
-- reformat API calls into wrapper for simplicity
 - get match(es history)
 - caching players
+- make sure all data calls are retrieved from database first, then API
+
+# Done
+- reformat API calls into wrapper for simplicity

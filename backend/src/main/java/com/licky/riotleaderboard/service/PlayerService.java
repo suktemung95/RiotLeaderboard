@@ -289,4 +289,8 @@ public class PlayerService {
         return new PlayerOverviewResponse(pr, rsr);
 
     }
+
+    public List<MatchResponse> getPlayerMatches(PlayerRequest playerRequest) {
+
+    }
 }

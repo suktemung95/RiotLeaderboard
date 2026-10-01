@@ -87,4 +87,16 @@ public class PlayerController {
                 playerService.getPlayerOverview(playerRequest)
         );
     }
+
+    @GetMapping("/matches")
+    public ResponseEntity<ApiResponse<Void>> getPlayerMatches(
+            @ModelAttribute PlayerRequest playerRequest
+    ) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "Player matches returned successfully",
+                playerService.getPlayerMatches(playerRequest)
+        );
+    }
 }
