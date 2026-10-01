@@ -133,12 +133,6 @@ public class PlayerService {
         return playerToResponse(player);
     }
 
-    public RankSnapshot getLatestRankSnapshot(Player player) {
-        return rankSnapshotRepository
-                .findTopByPlayerOrderByRecordedAtDesc(player)
-                .orElse(null);
-    }
-
     public RankSnapshotResponse refreshPlayer(Long id) {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundByIdException(id));

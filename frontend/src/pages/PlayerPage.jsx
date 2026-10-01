@@ -1,8 +1,24 @@
 import { useParams } from "react-router-dom";
+import { useEffect } from 'react'
 import "./PlayerPage.css";
+
+const URL_BASE = "http://localhost:8080/"
 
 export default function PlayerPage() {
   const { region, gameName, tagLine } = useParams();
+
+  useEffect(() => {
+    async function fetchData() {
+        const params = new URLSearchParams({ region, gameName, tagLine})
+        const url = URL_BASE + `players/overview?${params}` 
+
+        const response = await fetch(url)
+        const result = await response.json()
+        console.log(result)
+    }
+
+    fetchData()
+  }, [region, gameName, tagLine])
 
   return (
     <div className="player-page">
