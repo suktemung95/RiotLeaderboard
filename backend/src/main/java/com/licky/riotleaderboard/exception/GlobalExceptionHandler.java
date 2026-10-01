@@ -16,7 +16,7 @@ public class GlobalExceptionHandler extends RuntimeException {
     ) {
         return ApiResponses.build(
                 HttpStatus.NOT_FOUND,
-                "error",
+                false,
                 ex.getMessage(),
                 null
         );
@@ -28,7 +28,7 @@ public class GlobalExceptionHandler extends RuntimeException {
     ) {
         return ApiResponses.build(
                 HttpStatus.NOT_FOUND,
-                "error",
+                false,
                 ex.getMessage(),
                 null
         );
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler extends RuntimeException {
     ) {
         return ApiResponses.build(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "error",
+                false,
                 ex.getMessage(),
                 null
         );
@@ -52,7 +52,7 @@ public class GlobalExceptionHandler extends RuntimeException {
     ) {
         return ApiResponses.build(
                 HttpStatus.NOT_FOUND,
-                "error",
+                false,
                 ex.getMessage(),
                 null
         );

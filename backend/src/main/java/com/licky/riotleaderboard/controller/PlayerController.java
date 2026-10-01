@@ -28,7 +28,7 @@ public class PlayerController {
     public ResponseEntity<ApiResponse<Player>> addPlayer(@RequestBody PlayerResponse request) {
         return ApiResponses.build(
                 HttpStatus.OK,
-                "success",
+                true,
                 "Added player",
                 playerService.addPlayer(request)
         );
@@ -38,7 +38,7 @@ public class PlayerController {
     public ResponseEntity<ApiResponse<List<PlayerRankResponse>>> getPlayers() {
         return ApiResponses.build(
                 HttpStatus.OK,
-                "success",
+                true,
                 "Retrieved all players",
                 playerService.getLeaderboard()
         );
@@ -53,7 +53,7 @@ public class PlayerController {
     ) {
         return ApiResponses.build(
                 HttpStatus.OK,
-                "success",
+                true,
                 "retrieved player",
                 playerService.getPlayerByName(region, gameName, tagLine)
         );
@@ -63,7 +63,7 @@ public class PlayerController {
     public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(@PathVariable Long id) {
         return ApiResponses.build(
                 HttpStatus.OK,
-                "success",
+                true,
                 "Retrieved player history",
                 playerService.getPlayerHistory(id)
         );
@@ -73,7 +73,7 @@ public class PlayerController {
     public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayer(@PathVariable Long id) {
         return ApiResponses.build(
                 HttpStatus.OK,
-                "success",
+                true,
                 "Refreshed player rank snapshot",
                 playerService.refreshPlayer(id)
         );

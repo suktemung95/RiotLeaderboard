@@ -8,11 +8,11 @@ public class ApiResponses {
 
     public static <T> ResponseEntity<ApiResponse<T>> build(
             HttpStatus status,
-            String responseStatus,
+            boolean success,
             String message,
             T data
     ) {
         return ResponseEntity.status(status)
-                .body(new ApiResponse<>(responseStatus, message, data));
+                .body(new ApiResponse<>(success, message, data));
     }
 }
