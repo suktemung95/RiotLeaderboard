@@ -89,7 +89,7 @@ public class PlayerController {
     }
 
     @GetMapping("/matches")
-    public ResponseEntity<ApiResponse<Void>> getPlayerMatches(
+    public ResponseEntity<ApiResponse<List<String>>> getPlayerMatches(
             @ModelAttribute PlayerRequest playerRequest
     ) {
         return ApiResponses.build(

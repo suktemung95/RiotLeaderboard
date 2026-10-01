@@ -290,7 +290,16 @@ public class PlayerService {
 
     }
 
-    public List<MatchResponse> getPlayerMatches(PlayerRequest playerRequest) {
+    public List<String> getPlayerMatches(PlayerRequest playerRequest) {
+        String puuid = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+                playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
+        )
+                .orElseThrow(() -> new PlayerNotFoundByNameException(
+                        playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
+                ))
+                .getPuuid();
+
+        return riotApiService.getMatches(puuid);
 
     }
 }

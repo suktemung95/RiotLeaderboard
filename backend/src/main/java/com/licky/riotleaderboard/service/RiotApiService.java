@@ -59,4 +59,22 @@ public class RiotApiService {
 
     }
 
+    public List<String> getMatches(String puuid) {
+        System.out.println("PUUID: " + puuid);
+        return restClient.get()
+                .uri("https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids",
+                        puuid
+                ).header("X-Riot-Token", apiKey)
+                .retrieve()
+                .onStatus(
+                        status -> status.value() == 401 || status.value() == 403,
+                        (req, res) -> {
+                            System.out.println("Status: " + res.getStatusCode());
+                            System.out.println("Request: " + req.getURI());
+                            throw new InvalidRiotApiTokenException();
+                        }
+                )
+                .body(new ParameterizedTypeReference<List<String>>(){});
+    }
+
 }
