@@ -1,5 +1,6 @@
 package com.licky.riotleaderboard.service;
 
+import com.licky.riotleaderboard.dto.MatchResponse;
 import com.licky.riotleaderboard.dto.RiotAccountResponse;
 import com.licky.riotleaderboard.dto.RiotRankResponse;
 import com.licky.riotleaderboard.exception.InvalidRiotApiTokenException;
@@ -59,7 +60,7 @@ public class RiotApiService {
 
     }
 
-    public List<String> getMatches(String puuid) {
+    public List<String> getMatchIds(String puuid) {
         return restClient.get()
                 .uri("https://americas.api.riotgames.com/lol/match/v5/matches/by-puuid/{puuid}/ids",
                         puuid
@@ -72,6 +73,20 @@ public class RiotApiService {
                         }
                 )
                 .body(new ParameterizedTypeReference<List<String>>(){});
+    }
+
+    public MatchResponse getMatchDetails(String matchId) {
+        return restClient.get()
+                .uri("https://americas.api.riotgames.com/lol/match/v5/matches/{matchId}",
+                    matchId
+                ).header("X-Riot-Token", apiKey)
+                .retrieve()
+                .onStatus(
+                        status -> status.value() == 401 || status.value() == 403,
+                        (req, res) -> {
+                            throw new InvalidRiotApiTokenException();
+                        }
+                ).body(MatchResponse.class);
     }
 
 }

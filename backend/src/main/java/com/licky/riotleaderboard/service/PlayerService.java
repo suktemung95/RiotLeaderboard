@@ -5,8 +5,12 @@ import com.licky.riotleaderboard.exception.PlayerNotFoundByIdException;
 import com.licky.riotleaderboard.exception.PlayerNotFoundByNameException;
 import com.licky.riotleaderboard.exception.RankSnapshotNotFoundException;
 import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
+import com.licky.riotleaderboard.model.Match;
 import com.licky.riotleaderboard.model.Player;
+import com.licky.riotleaderboard.model.PlayerMatch;
 import com.licky.riotleaderboard.model.RankSnapshot;
+import com.licky.riotleaderboard.repository.MatchRepository;
+import com.licky.riotleaderboard.repository.PlayerMatchRepository;
 import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -19,15 +23,21 @@ import java.util.*;
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
+    private final MatchRepository matchRepository;
+    private final PlayerMatchRepository playerMatchRepository;
     private final RankSnapshotRepository rankSnapshotRepository;
     private final RiotApiService riotApiService;
 
     public PlayerService(
             PlayerRepository playerRepository,
+            MatchRepository matchRepository,
+            PlayerMatchRepository playerMatchRepository,
             RankSnapshotRepository rankSnapshotRepository,
             RiotApiService riotApiService
     ) {
         this.playerRepository = playerRepository;
+        this.matchRepository = matchRepository;
+        this.playerMatchRepository = playerMatchRepository;
         this.rankSnapshotRepository = rankSnapshotRepository;
         this.riotApiService = riotApiService;
     }
@@ -291,15 +301,70 @@ public class PlayerService {
     }
 
     public List<String> getPlayerMatches(PlayerRequest playerRequest) {
-        String puuid = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+        Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
                 playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
         )
                 .orElseThrow(() -> new PlayerNotFoundByNameException(
                         playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
-                ))
-                .getPuuid();
+                ));
 
-        return riotApiService.getMatches(puuid);
+        String puuid = player.getPuuid();
 
+        List<String> fetchedMatchIds = riotApiService.getMatchIds(puuid);
+        List<Match> existingMatches = matchRepository.findByRiotMatchIdIn(fetchedMatchIds);
+        List<String> newMatchIds = new ArrayList<>();
+        Set<String> existingMatchIds = new HashSet<>();
+
+        // get ids of existingMatches
+        for (Match match : existingMatches) {
+            existingMatchIds.add(match.getRiot_match_id());
+        }
+
+        // get newMatcheIds not already existing in database
+        for (String matchId : fetchedMatchIds) {
+            if (!existingMatchIds.contains(matchId)) {
+                newMatchIds.add(matchId);
+            }
+        }
+
+        List<Match> newMatches = new ArrayList<>();
+
+        // call for detailed matches and create newMatch objects to save
+        for (String matchId : newMatchIds) {
+            // call Riot for full match data
+            MatchResponse matchResponse = riotApiService.getMatchDetails(matchId);
+
+            // convert it into your Match entity
+            Match match = new Match(
+                    matchResponse.metadata().matchId(),
+                    matchResponse.info().gameStartTimestamp(),
+                    matchResponse.info().queueId(),
+                    LocalDateTime.now()
+            );
+
+            newMatches.add(match);
+        }
+
+        matchRepository.saveAll(newMatches);
+
+        List<Match> allMatches = new ArrayList<>(newMatches);
+        allMatches.addAll(existingMatches);
+
+        Set<Long> existingPlayerMatchIds = new HashSet<>();
+
+        for (PlayerMatch playerMatch : playerMatchRepository.findByPlayer(player)) {
+            existingPlayerMatchIds.add(playerMatch.getMatch().getId());
+        }
+
+        List<PlayerMatch> newPlayerMatches = new ArrayList<>();
+        for (Match match: allMatches) {
+            if (!existingPlayerMatchIds.contains(match.getId())) {
+                newPlayerMatches.add(new PlayerMatch(player, match));
+            }
+        }
+
+        playerMatchRepository.saveAll(newPlayerMatches);
+
+        return fetchedMatchIds;
     }
 }

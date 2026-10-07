@@ -10,28 +10,37 @@ public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String riot_match_id;
-    private String game_start_time;
-    private String queue_id;
-    private LocalDateTime recorded_at;
+    private String riotMatchId;
+    private long gameStartTime;
+    private int queueId;
+    private LocalDateTime recordedAt;
+
+    public Match() {};
+
+    public Match(String matchId, long gameStartTime, int queueId, LocalDateTime now) {
+        this.riotMatchId = matchId;
+        this.gameStartTime = gameStartTime;
+        this.queueId = queueId;
+        this.recordedAt = now;
+    }
 
     public Long getId() {
         return id;
     }
 
     public String getRiot_match_id() {
-        return riot_match_id;
+        return riotMatchId;
     }
 
-    public String getGame_start_time() {
-        return game_start_time;
+    public long getGame_start_time() {
+        return gameStartTime;
     }
 
-    public String getQueue_id() {
-        return queue_id;
+    public int getQueue_id() {
+        return queueId;
     }
 
     public LocalDateTime getRecorded_at() {
-        return recorded_at;
+        return recordedAt;
     }
 }
