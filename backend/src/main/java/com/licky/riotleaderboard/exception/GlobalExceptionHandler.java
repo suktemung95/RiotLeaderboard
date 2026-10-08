@@ -69,4 +69,16 @@ public class GlobalExceptionHandler extends RuntimeException {
                 null
         );
     }
+
+    @ExceptionHandler(PlayerNotParticipantInMatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handlePlayerNotParticipantInMatchException(
+            PlayerNotParticipantInMatchException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.NOT_FOUND,
+                false,
+                ex.getMessage(),
+                null
+        );
+    }
 }

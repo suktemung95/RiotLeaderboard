@@ -317,7 +317,7 @@ public class PlayerService {
 
         // get ids of existingMatches
         for (Match match : existingMatches) {
-            existingMatchIds.add(match.getRiot_match_id());
+            existingMatchIds.add(match.getRiotMatchId());
         }
 
         // get newMatcheIds not already existing in database

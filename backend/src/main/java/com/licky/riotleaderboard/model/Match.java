@@ -13,9 +13,9 @@ public class Match {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(unique = true, nullable = false)
     private String riotMatchId;
-    private long gameStartTime;
-    private int queueId;
     private LocalDateTime recordedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -26,46 +26,16 @@ public class Match {
 
     public Match(MatchResponse matchResponse) {
         this.riotMatchId = matchResponse.metadata().matchId();
-        this.gameStartTime = matchResponse.info().gameStartTimestamp();
-        this.queueId = matchResponse.info().queueId();
         this.recordedAt = LocalDateTime.now();
         this.rawData = matchResponse;
-    }
-
-    public void setRiotMatchId(String riotMatchId) {
-        this.riotMatchId = riotMatchId;
-    }
-
-    public void setGameStartTime(long gameStartTime) {
-        this.gameStartTime = gameStartTime;
-    }
-
-    public void setQueueId(int queueId) {
-        this.queueId = queueId;
-    }
-
-    public void setRecordedAt(LocalDateTime recordedAt) {
-        this.recordedAt = recordedAt;
-    }
-
-    public void setRawData(MatchResponse rawData) {
-        this.rawData = rawData;
     }
 
     public Long getId() {
         return id;
     }
 
-    public String getRiot_match_id() {
+    public String getRiotMatchId() {
         return riotMatchId;
-    }
-
-    public long getGame_start_time() {
-        return gameStartTime;
-    }
-
-    public int getQueue_id() {
-        return queueId;
     }
 
     public LocalDateTime getRecorded_at() {
