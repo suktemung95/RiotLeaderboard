@@ -19,7 +19,7 @@ public class Match {
     private LocalDateTime recordedAt;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb")
+    @Column(columnDefinition = "jsonb", nullable = false)
     private MatchResponse rawData;
 
     public Match() {};
@@ -30,6 +30,26 @@ public class Match {
         this.queueId = queueId;
         this.recordedAt = now;
         this.rawData = matchResponse;
+    }
+
+    public void setRiotMatchId(String riotMatchId) {
+        this.riotMatchId = riotMatchId;
+    }
+
+    public void setGameStartTime(long gameStartTime) {
+        this.gameStartTime = gameStartTime;
+    }
+
+    public void setQueueId(int queueId) {
+        this.queueId = queueId;
+    }
+
+    public void setRecordedAt(LocalDateTime recordedAt) {
+        this.recordedAt = recordedAt;
+    }
+
+    public void setRawData(MatchResponse rawData) {
+        this.rawData = rawData;
     }
 
     public Long getId() {
@@ -50,5 +70,9 @@ public class Match {
 
     public LocalDateTime getRecorded_at() {
         return recordedAt;
+    }
+
+    public MatchResponse getRawData() {
+        return rawData;
     }
 }
