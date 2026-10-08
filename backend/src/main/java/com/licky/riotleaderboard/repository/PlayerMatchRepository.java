@@ -10,4 +10,10 @@ import java.util.List;
 
 public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, PlayerMatchId> {
     List<PlayerMatch> findByPlayer(Player player);
+    List<PlayerMatch> findByPlayer_GameNameIgnoreCaseAndPlayer_TagLineIgnoreCaseAndPlayer_RegionIgnoreCaseAndMatch_RiotMatchIdIn(
+            String gamename,
+            String tagLine,
+            String region,
+            List<String> matchIds
+    );
 }

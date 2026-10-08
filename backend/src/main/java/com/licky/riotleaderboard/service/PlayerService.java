@@ -362,4 +362,27 @@ public class PlayerService {
 
         return fetchedMatchIds;
     }
+
+    public List<PlayerMatchDataResponse> getPlayerMatchesData(PlayerRequest playerRequest) {
+        List<String> playerMatchIds = getPlayerMatches(playerRequest);
+
+        List<PlayerMatch> playerMatches = playerMatchRepository
+                .findByPlayer_GameNameIgnoreCaseAndPlayer_TagLineIgnoreCaseAndPlayer_RegionIgnoreCaseAndMatch_RiotMatchIdIn(
+                        playerRequest.gameName(),
+                        playerRequest.tagLine(),
+                        playerRequest.region(),
+                        playerMatchIds
+                );
+
+        List<PlayerMatchDataResponse> playerMatchResponses = new ArrayList<>();
+        for (PlayerMatch playerMatch : playerMatches) {
+            playerMatchResponses.add(new PlayerMatchDataResponse(
+                    playerMatch.getMatch().getRiotMatchId(),
+                    playerMatch.getMatch().getRawData().info().gameStartTimestamp(),
+                    playerMatch.getParticipant()
+            ));
+        }
+
+        return playerMatchResponses;
+    }
 }

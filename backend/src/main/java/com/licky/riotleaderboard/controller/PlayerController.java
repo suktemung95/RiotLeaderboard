@@ -99,4 +99,16 @@ public class PlayerController {
                 playerService.getPlayerMatches(playerRequest)
         );
     }
+
+    @GetMapping("/matches/data")
+    public ResponseEntity<ApiResponse<List<PlayerMatchDataResponse>>> getPlayerMatchesData(
+            @ModelAttribute PlayerRequest playerRequest
+    ) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "Player matches returned successfully",
+                playerService.getPlayerMatchesData(playerRequest)
+        );
+    }
 }

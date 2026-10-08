@@ -5,6 +5,9 @@
 - caching players
 - make sure all data calls are retrieved from database first, then API
 - standardize the return from riotApi calls
+- figure out a way to fix N + 1 in getPlayerMatches and getPlayerMatchesDetails
+- possibly remove (or create new + smaller) DTO for Participants that doesn't include user information (unnecessary)
+- find other information to add to PlayerMatchDataResponse DTO (teammates, gameDuration, queueId (or name), role(s), items, gold (differential)) 
 
 # Done
 - reformat API calls into wrapper for simplicity
