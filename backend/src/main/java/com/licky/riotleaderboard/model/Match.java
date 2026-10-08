@@ -1,6 +1,9 @@
 package com.licky.riotleaderboard.model;
 
+import com.licky.riotleaderboard.dto.MatchResponse;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 
@@ -15,13 +18,18 @@ public class Match {
     private int queueId;
     private LocalDateTime recordedAt;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb")
+    private MatchResponse rawData;
+
     public Match() {};
 
-    public Match(String matchId, long gameStartTime, int queueId, LocalDateTime now) {
+    public Match(String matchId, long gameStartTime, int queueId, LocalDateTime now, MatchResponse matchResponse) {
         this.riotMatchId = matchId;
         this.gameStartTime = gameStartTime;
         this.queueId = queueId;
         this.recordedAt = now;
+        this.rawData = matchResponse;
     }
 
     public Long getId() {

@@ -339,7 +339,8 @@ public class PlayerService {
                     matchResponse.metadata().matchId(),
                     matchResponse.info().gameStartTimestamp(),
                     matchResponse.info().queueId(),
-                    LocalDateTime.now()
+                    LocalDateTime.now(),
+                    matchResponse
             );
 
             newMatches.add(match);
