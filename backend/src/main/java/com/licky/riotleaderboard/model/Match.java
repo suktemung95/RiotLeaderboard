@@ -24,11 +24,11 @@ public class Match {
 
     public Match() {};
 
-    public Match(String matchId, long gameStartTime, int queueId, LocalDateTime now, MatchResponse matchResponse) {
-        this.riotMatchId = matchId;
-        this.gameStartTime = gameStartTime;
-        this.queueId = queueId;
-        this.recordedAt = now;
+    public Match(MatchResponse matchResponse) {
+        this.riotMatchId = matchResponse.metadata().matchId();
+        this.gameStartTime = matchResponse.info().gameStartTimestamp();
+        this.queueId = matchResponse.info().queueId();
+        this.recordedAt = LocalDateTime.now();
         this.rawData = matchResponse;
     }
 

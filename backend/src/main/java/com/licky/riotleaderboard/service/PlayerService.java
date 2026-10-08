@@ -335,13 +335,7 @@ public class PlayerService {
             MatchResponse matchResponse = riotApiService.getMatchDetails(matchId);
 
             // convert it into your Match entity
-            Match match = new Match(
-                    matchResponse.metadata().matchId(),
-                    matchResponse.info().gameStartTimestamp(),
-                    matchResponse.info().queueId(),
-                    LocalDateTime.now(),
-                    matchResponse
-            );
+            Match match = new Match(matchResponse);
 
             newMatches.add(match);
         }
