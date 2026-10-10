@@ -376,9 +376,11 @@ public class PlayerService {
 
         List<PlayerMatchDataResponse> playerMatchResponses = new ArrayList<>();
         for (PlayerMatch playerMatch : playerMatches) {
+
+            MatchResponse rawData = playerMatch.getMatch().getRawData();
             playerMatchResponses.add(new PlayerMatchDataResponse(
                     playerMatch.getMatch().getRiotMatchId(),
-                    playerMatch.getMatch().getRawData().info().gameStartTimestamp(),
+                    rawData.info(),
                     playerMatch.getParticipant()
             ));
         }

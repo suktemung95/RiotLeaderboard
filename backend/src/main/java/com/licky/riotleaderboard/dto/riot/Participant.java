@@ -10,6 +10,22 @@ public record Participant(
         int assists,
         int totalMinionsKilled,
         int neutralMinionsKilled,
-        boolean win
+        boolean win,
+        int item0,
+        int item1,
+        int item2,
+        int item3,
+        int item4,
+        int item5,
+        int item6,
+        String lane,
+        int largestMultiKill,
+        String role,
+        int teamId,
+        int totalDamageDealt,
+        int totalDamageDealtToChampions,
+        int totalDamageShieldedOnTeammates,
+        int totalDamageTaken,
+        int visionScore
 ) {
 }
