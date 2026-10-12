@@ -4,11 +4,25 @@ import "./PlayerPage.css";
 
 const URL_BASE = "http://localhost:8080/"
 
+const DDRAGON_VERSION = "16.20.1";
+
 export default function PlayerPage() {
 
   const [matches, setMatches] = useState([]);
 
   const { region, gameName, tagLine } = useParams();
+
+  function getChampionIcon(championName) {
+    return `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}/img/champion/${championName}.png`;
+  }
+
+  function getItemIcon(itemId) {
+    if (!itemId || itemId === 0) {
+      return null;
+    }
+
+    return `https://ddragon.leagueoflegends.com/cdn/${DDRAGON_VERSION}/img/item/${itemId}.png`;
+  }
 
   function getGameMode(queueId) {
     switch (queueId) {
@@ -25,6 +39,33 @@ export default function PlayerPage() {
     }
   }
 
+  function formatGameDate(timestamp) {
+    const date = new Date(timestamp);
+
+    return date.toLocaleString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
+  function formatRole(teamPosition) {
+    switch (teamPosition) {
+      case "TOP":
+        return "TOP";
+      case "JUNGLE":
+        return "JUNGLE";
+      case "MIDDLE":
+        return "MID";
+      case "BOTTOM":
+        return "ADC";
+      case "UTILITY":
+        return "SUPPORT";
+      default:
+        return teamPosition;
+    }
+  }
   useEffect(() => {
     async function fetchData() {
       const params = new URLSearchParams({
@@ -176,52 +217,65 @@ export default function PlayerPage() {
                   >
                     <div className="match-result">
                       <strong>{participant.win ? "WIN" : "LOSS"}</strong>
-                      <span>{match.info.gameStartTimestamp}</span>
+                      <span>{formatGameDate(match.info.gameStartTimestamp)}</span>
                     </div>
 
                     <div className="champion-placeholder">
-                      {participant.championName[0]}
+                      <img
+                        src={getChampionIcon(participant.championName)}
+                        alt={participant.championName}
+                      />
                     </div>
 
                     <div className="match-info">
                       <strong>{participant.championName}</strong>
                       <span>
-                        {getGameMode(match.info.queueId)} · {participant.role}
+                        {getGameMode(match.info.queueId)}
+                        {match.info.queueId !== 1750 && ` · ${formatRole(participant.teamPosition)}`}
                       </span>
                     </div>
 
                     <div className="match-items-grid">
+
+                      {/* Trinket */}
                       <div className="item-slot special-slot">
-                        {trinketItem}
+                        {trinketItem !== 0 && (
+                          <img
+                            src={getItemIcon(trinketItem)}
+                            alt={`Trinket ${trinketItem}`}
+                          />
+                        )}
                       </div>
 
-                      <div className="item-slot">
-                        {items[0] !== 0 ? items[0] : "-"}
-                      </div>
+                      {/* Top 3 items */}
+                      {items.slice(0, 3).map((itemId, index) => (
+                        <div key={index} className="item-slot">
+                          {itemId !== 0 && (
+                            <img
+                              src={getItemIcon(itemId)}
+                              alt={`Item ${itemId}`}
+                            />
+                          )}
+                        </div>
+                      ))}
 
-                      <div className="item-slot">
-                        {items[1] !== 0 ? items[1] : "-"}
-                      </div>
-
-                      <div className="item-slot">
-                        {items[2] !== 0 ? items[2] : "-"}
-                      </div>
-
+                      {/* Role — icon later */}
                       <div className="item-slot special-slot">
                         {roleItem}
                       </div>
 
-                      <div className="item-slot">
-                        {items[3] !== 0 ? items[3] : "-"}
-                      </div>
+                      {/* Bottom 3 items */}
+                      {items.slice(3, 6).map((itemId, index) => (
+                        <div key={index + 3} className="item-slot">
+                          {itemId !== 0 && (
+                            <img
+                              src={getItemIcon(itemId)}
+                              alt={`Item ${itemId}`}
+                            />
+                          )}
+                        </div>
+                      ))}
 
-                      <div className="item-slot">
-                        {items[4] !== 0 ? items[4] : "-"}
-                      </div>
-
-                      <div className="item-slot">
-                        {items[5] !== 0 ? items[5] : "-"}
-                      </div>
                     </div>
 
                     <div className="kda">
