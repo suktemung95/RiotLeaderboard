@@ -9,6 +9,7 @@ const DDRAGON_VERSION = "16.20.1";
 export default function PlayerPage() {
 
   const [matches, setMatches] = useState([]);
+  const [player, setPlayer] = useState(null);
 
   const { region, gameName, tagLine } = useParams();
 
@@ -88,6 +89,7 @@ export default function PlayerPage() {
       console.log(overviewResult);
       console.log(matchesResult);
 
+      setPlayer(overviewResult.data)
       setMatches(matchesResult.data);
     }
 
@@ -146,27 +148,30 @@ export default function PlayerPage() {
               <div className="rank-emblem">◆</div>
 
               <div>
-                <h2>Emerald II</h2>
-                <p>54 LP</p>
+                <h2>{player ? player.rankSnapshotResponse.tier : '...'} {player && player.rankSnapshotResponse.rank}</h2>
+                <p>{player ? player.rankSnapshotResponse.leaguePoints : "..."} LP</p>
               </div>
             </div>
           </div>
 
           <div className="card stat-card">
             <div className="card-label">WIN RATE</div>
-            <strong>54.2%</strong>
-            <span>84W · 71L</span>
+            <strong>{
+              player ?
+                (100 * player.rankSnapshotResponse.wins / (player.rankSnapshotResponse.wins + player.rankSnapshotResponse.losses)).toFixed(2)
+                : "..."}%</strong>
+            <span>{player && player.rankSnapshotResponse.wins}W · {player && player.rankSnapshotResponse.losses}L</span>
           </div>
 
           <div className="card stat-card">
             <div className="card-label">TOTAL GAMES</div>
-            <strong>155</strong>
-            <span>Ranked Solo</span>
+            <strong>{player ? player.rankSnapshotResponse.wins + player.rankSnapshotResponse.losses : "..."}</strong>
+            <span>---</span>
           </div>
 
           <div className="card stat-card">
             <div className="card-label">LEAGUE POINTS</div>
-            <strong>54</strong>
+            <strong>{player ? player.rankSnapshotResponse.leaguePoints : "..."}</strong>
             <span>Current LP</span>
           </div>
         </section>
@@ -196,7 +201,7 @@ export default function PlayerPage() {
                 ];
 
                 const trinketItem = participant.item6;
-                const roleItem = participant.role;
+                const roleItem = null; // this is temporary
 
                 const cs =
                   participant.totalMinionsKilled +
@@ -306,27 +311,37 @@ export default function PlayerPage() {
 
               <div className="summary-row">
                 <span>Tier</span>
-                <strong>Emerald</strong>
+                <strong>
+                  {player ? player.rankSnapshotResponse.tier : "..."}
+                </strong>
               </div>
 
               <div className="summary-row">
                 <span>Division</span>
-                <strong>II</strong>
+                <strong>
+                  {player ? player.rankSnapshotResponse.rank : "..."}
+                </strong>
               </div>
 
               <div className="summary-row">
                 <span>League Points</span>
-                <strong>54 LP</strong>
+                <strong>
+                  {player ? `${player.rankSnapshotResponse.leaguePoints} LP` : "..."}
+                </strong>
               </div>
 
               <div className="summary-row">
                 <span>Wins</span>
-                <strong>84</strong>
+                <strong>
+                  {player ? player.rankSnapshotResponse.wins : "..."}
+                </strong>
               </div>
 
               <div className="summary-row">
                 <span>Losses</span>
-                <strong>71</strong>
+                <strong>
+                  {player ? player.rankSnapshotResponse.losses : "..."}
+                </strong>
               </div>
             </div>
 
