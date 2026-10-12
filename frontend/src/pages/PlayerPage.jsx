@@ -76,7 +76,7 @@ export default function PlayerPage() {
       });
 
       const overviewUrl = URL_BASE + `players/overview?${params}`;
-      const matchesUrl = URL_BASE + `players/matches/data?${params}`;
+      const matchesUrl = URL_BASE + `players/matches?${params}`;
 
       const [overviewResponse, matchesResponse] = await Promise.all([
         fetch(overviewUrl),

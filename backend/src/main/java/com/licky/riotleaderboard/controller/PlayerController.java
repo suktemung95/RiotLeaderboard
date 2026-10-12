@@ -89,7 +89,7 @@ public class PlayerController {
     }
 
     @GetMapping("/matches")
-    public ResponseEntity<ApiResponse<List<String>>> getPlayerMatches(
+    public ResponseEntity<ApiResponse<List<PlayerMatchDataResponse>>> getPlayerMatches(
             @ModelAttribute PlayerRequest playerRequest
     ) {
         return ApiResponses.build(
@@ -97,18 +97,6 @@ public class PlayerController {
                 true,
                 "Player matches returned successfully",
                 playerService.getPlayerMatches(playerRequest)
-        );
-    }
-
-    @GetMapping("/matches/data")
-    public ResponseEntity<ApiResponse<List<PlayerMatchDataResponse>>> getPlayerMatchesData(
-            @ModelAttribute PlayerRequest playerRequest
-    ) {
-        return ApiResponses.build(
-                HttpStatus.OK,
-                true,
-                "Player matches returned successfully",
-                playerService.getPlayerMatchesData(playerRequest)
         );
     }
 }
