@@ -133,16 +133,6 @@ public class PlayerService {
                  .toList();
     }
 
-    public PlayerResponse getPlayerByName(String region, String gameName, String tagLine) {
-        Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
-                region, gameName, tagLine
-        )
-                .orElseThrow(() -> new PlayerNotFoundByNameException(region, gameName, tagLine));
-
-
-        return playerToResponse(player);
-    }
-
     public RankSnapshotResponse refreshPlayer(Long id) {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundByIdException(id));
