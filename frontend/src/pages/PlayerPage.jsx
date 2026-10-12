@@ -1,24 +1,57 @@
 import { useParams } from "react-router-dom";
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import "./PlayerPage.css";
 
 const URL_BASE = "http://localhost:8080/"
 
 export default function PlayerPage() {
+
+  const [matches, setMatches] = useState([]);
+
   const { region, gameName, tagLine } = useParams();
+
+  function getGameMode(queueId) {
+    switch (queueId) {
+      case 420:
+        return "Ranked Solo";
+      case 440:
+        return "Ranked Flex";
+      case 450:
+        return "ARAM";
+      case 1750:
+        return "Arena";
+      default:
+        return `Queue ${queueId}`;
+    }
+  }
 
   useEffect(() => {
     async function fetchData() {
-        const params = new URLSearchParams({ region, gameName, tagLine})
-        const url = URL_BASE + `players/overview?${params}` 
+      const params = new URLSearchParams({
+        region,
+        gameName,
+        tagLine
+      });
 
-        const response = await fetch(url)
-        const result = await response.json()
-        console.log(result)
+      const overviewUrl = URL_BASE + `players/overview?${params}`;
+      const matchesUrl = URL_BASE + `players/matches/data?${params}`;
+
+      const [overviewResponse, matchesResponse] = await Promise.all([
+        fetch(overviewUrl),
+        fetch(matchesUrl)
+      ]);
+
+      const overviewResult = await overviewResponse.json();
+      const matchesResult = await matchesResponse.json();
+
+      console.log(overviewResult);
+      console.log(matchesResult);
+
+      setMatches(matchesResult.data);
     }
 
-    fetchData()
-  }, [region, gameName, tagLine])
+    fetchData();
+  }, [region, gameName, tagLine]);
 
   return (
     <div className="player-page">
@@ -109,77 +142,102 @@ export default function PlayerPage() {
             </div>
 
             <div className="match-list">
-              <div className="match-row win">
-                <div className="match-result">
-                  <strong>WIN</strong>
-                  <span>28m ago</span>
-                </div>
+              {matches.map((match) => {
+                const participant = match.participant;
 
-                <div className="champion-placeholder">A</div>
+                const items = [
+                  participant.item0,
+                  participant.item1,
+                  participant.item2,
+                  participant.item3,
+                  participant.item4,
+                  participant.item5,
+                ];
 
-                <div className="match-info">
-                  <strong>Ahri</strong>
-                  <span>Ranked Solo</span>
-                </div>
+                const trinketItem = participant.item6;
+                const roleItem = participant.role;
 
-                <div className="kda">
-                  <strong>8 / 2 / 11</strong>
-                  <span>9.50 KDA</span>
-                </div>
+                const cs =
+                  participant.totalMinionsKilled +
+                  participant.neutralMinionsKilled;
 
-                <div className="match-stats">
-                  <span>214 CS</span>
-                  <span>+18 LP</span>
-                </div>
-              </div>
+                const kda =
+                  participant.deaths === 0
+                    ? "Perfect"
+                    : (
+                        (participant.kills + participant.assists) /
+                        participant.deaths
+                      ).toFixed(2);
 
-              <div className="match-row loss">
-                <div className="match-result">
-                  <strong>LOSS</strong>
-                  <span>1h ago</span>
-                </div>
+                return (
+                  <div
+                    key={match.matchId}
+                    className={`match-row ${participant.win ? "win" : "loss"}`}
+                  >
+                    <div className="match-result">
+                      <strong>{participant.win ? "WIN" : "LOSS"}</strong>
+                      <span>{match.info.gameStartTimestamp}</span>
+                    </div>
 
-                <div className="champion-placeholder">V</div>
+                    <div className="champion-placeholder">
+                      {participant.championName[0]}
+                    </div>
 
-                <div className="match-info">
-                  <strong>Viktor</strong>
-                  <span>Ranked Solo</span>
-                </div>
+                    <div className="match-info">
+                      <strong>{participant.championName}</strong>
+                      <span>
+                        {getGameMode(match.info.queueId)} · {participant.role}
+                      </span>
+                    </div>
 
-                <div className="kda">
-                  <strong>4 / 7 / 6</strong>
-                  <span>1.43 KDA</span>
-                </div>
+                    <div className="match-items-grid">
+                      <div className="item-slot special-slot">
+                        {trinketItem}
+                      </div>
 
-                <div className="match-stats">
-                  <span>198 CS</span>
-                  <span>-22 LP</span>
-                </div>
-              </div>
+                      <div className="item-slot">
+                        {items[0] !== 0 ? items[0] : "-"}
+                      </div>
 
-              <div className="match-row win">
-                <div className="match-result">
-                  <strong>WIN</strong>
-                  <span>2h ago</span>
-                </div>
+                      <div className="item-slot">
+                        {items[1] !== 0 ? items[1] : "-"}
+                      </div>
 
-                <div className="champion-placeholder">S</div>
+                      <div className="item-slot">
+                        {items[2] !== 0 ? items[2] : "-"}
+                      </div>
 
-                <div className="match-info">
-                  <strong>Syndra</strong>
-                  <span>Ranked Solo</span>
-                </div>
+                      <div className="item-slot special-slot">
+                        {roleItem}
+                      </div>
 
-                <div className="kda">
-                  <strong>11 / 4 / 8</strong>
-                  <span>4.75 KDA</span>
-                </div>
+                      <div className="item-slot">
+                        {items[3] !== 0 ? items[3] : "-"}
+                      </div>
 
-                <div className="match-stats">
-                  <span>236 CS</span>
-                  <span>+20 LP</span>
-                </div>
-              </div>
+                      <div className="item-slot">
+                        {items[4] !== 0 ? items[4] : "-"}
+                      </div>
+
+                      <div className="item-slot">
+                        {items[5] !== 0 ? items[5] : "-"}
+                      </div>
+                    </div>
+
+                    <div className="kda">
+                      <strong>
+                        {participant.kills} / {participant.deaths} /{" "}
+                        {participant.assists}
+                      </strong>
+                      <span>{kda} KDA</span>
+                    </div>
+
+                    <div className="match-stats">
+                      <span>{cs} CS</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
