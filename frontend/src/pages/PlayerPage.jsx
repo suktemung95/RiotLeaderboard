@@ -40,6 +40,12 @@ export default function PlayerPage() {
     }
   }
 
+  function getRankEmblem(tier) {
+    if (!tier) return null;
+
+    return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/ranked-emblem/emblem-${tier.toLowerCase()}.png`;
+  }
+
   function formatGameDate(timestamp) {
     const date = new Date(timestamp);
 
@@ -145,7 +151,14 @@ export default function PlayerPage() {
             <div className="card-label">CURRENT RANK</div>
 
             <div className="rank-content">
-              <div className="rank-emblem">◆</div>
+              <div className="rank-emblem">
+                {player && (
+                  <img
+                    src={getRankEmblem(player.rankSnapshotResponse.tier)}
+                    alt={`${player.rankSnapshotResponse.tier} rank`}
+                  />
+                )}
+              </div>
 
               <div>
                 <h2>{player ? player.rankSnapshotResponse.tier : '...'} {player && player.rankSnapshotResponse.rank}</h2>
