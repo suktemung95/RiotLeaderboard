@@ -100,13 +100,14 @@ public class PlayerController {
         );
     }
 
-    @PostMapping("/{puuid}/refresh")
-    public ResponseEntity<ApiResponse<PlayerRefreshResponse>> refreshPlayer(@PathVariable String puuid) {
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<PlayerRefreshResponse>> refreshPlayer(
+            @ModelAttribute PlayerRequest playerRequest) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
                 "Player refreshed successfully",
-                playerService.refreshPlayer(puuid)
+                playerService.refreshPlayer(playerRequest)
         );
     }
 }

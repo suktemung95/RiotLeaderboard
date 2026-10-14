@@ -432,11 +432,20 @@ public class PlayerService {
     }
 
     @Transactional
-    public PlayerRefreshResponse refreshPlayer(String puuid) {
+    public PlayerRefreshResponse refreshPlayer(PlayerRequest playerRequest) {
 
         // refresh rank
-        Player player = playerRepository.findByPuuid(puuid)
-                .orElseThrow(() -> new PlayerNotFoundByPuuidException(puuid));
+        Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+                    playerRequest.region(),
+                    playerRequest.gameName(),
+                    playerRequest.tagLine()
+                )
+                .orElseThrow(() -> new PlayerNotFoundByNameException(
+                        playerRequest.region(),
+                        playerRequest.gameName(),
+                        playerRequest.tagLine()
+                ));
+        String puuid = player.getPuuid();
 
         // get latest match Ids from Riot
         RiotRankResponse riotRankResponse = refreshSoloDuoRank(puuid, player.getRegion())
