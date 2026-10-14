@@ -1,8 +1,11 @@
 # current
+- refreshPlayer + Matches
 
 # next
+- clean up unnecessary functions in PlayerController + Service
 - caching players
 - make sure all data calls are retrieved from database first, then API
+  - on this note, make sure the database or even cache returns, then somehow make an API refresh
 - if a call is taken from database, do an async refresh from the API directly afterward
 - figure out a way to fix N + 1 in getPlayerMatches and getPlayerMatchesDetails
 - possibly remove (or create new + smaller) DTO for Participants that doesn't include user information (unnecessary)

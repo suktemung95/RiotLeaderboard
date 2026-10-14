@@ -66,13 +66,13 @@ public class PlayerController {
         );
     }
 
-    @PostMapping("/{id}/refresh")
-    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayer(@PathVariable Long id) {
+    @PostMapping("/{id}/refreshRank")
+    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayerRank(@PathVariable Long id) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
                 "Refreshed player rank snapshot",
-                playerService.refreshPlayer(id)
+                playerService.refreshPlayerRank(id)
         );
     }
 
@@ -97,6 +97,16 @@ public class PlayerController {
                 true,
                 "Player matches returned successfully",
                 playerService.getPlayerMatches(playerRequest)
+        );
+    }
+
+    @PostMapping("/{puuid}/refresh")
+    public ResponseEntity<ApiResponse<PlayerRefreshResponse>> refreshPlayer(@PathVariable String puuid) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "Player refreshed successfully",
+                playerService.refreshPlayer(puuid)
         );
     }
 }

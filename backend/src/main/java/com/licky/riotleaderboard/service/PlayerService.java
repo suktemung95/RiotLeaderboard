@@ -1,7 +1,7 @@
 package com.licky.riotleaderboard.service;
 
 import com.licky.riotleaderboard.dto.*;
-import com.licky.riotleaderboard.exception.PlayerNotFoundByIdException;
+import com.licky.riotleaderboard.exception.PlayerNotFoundByPuuidException;
 import com.licky.riotleaderboard.exception.PlayerNotFoundByNameException;
 import com.licky.riotleaderboard.exception.RankSnapshotNotFoundException;
 import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
@@ -15,6 +15,7 @@ import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -65,7 +66,7 @@ public class PlayerService {
 
         Player savedPlayer = playerRepository.save(player);
 
-        getSoloDuoRank(savedPlayer.getPuuid(), savedPlayer.getRegion())
+        refreshSoloDuoRank(savedPlayer.getPuuid(), savedPlayer.getRegion())
             .ifPresent(rank -> saveRankSnapshot(savedPlayer, rank));
 
         return savedPlayer;
@@ -114,24 +115,24 @@ public class PlayerService {
         return responses;
     }
 
-    public List<RankSnapshotResponse> getPlayerHistory(Long id) {
-
-         Player player = playerRepository.findById(id)
-                 .orElseThrow(() -> new PlayerNotFoundByIdException(id));
-
-         return rankSnapshotRepository
-                 .findByPlayerOrderByRecordedAtDesc(player)
-                 .stream()
-                 .map(s -> new RankSnapshotResponse(
-                         s.getTier(),
-                         s.getRank(),
-                         s.getLeaguePoints(),
-                         s.getWins(),
-                         s.getLosses(),
-                         s.getRecordedAt()
-                 ))
-                 .toList();
-    }
+//    public List<RankSnapshotResponse> getPlayerHistory(Long id) {
+//
+//         Player player = playerRepository.findById(id)
+//                 .orElseThrow(() -> new PlayerNotFoundByIdException(id));
+//
+//         return rankSnapshotRepository
+//                 .findByPlayerOrderByRecordedAtDesc(player)
+//                 .stream()
+//                 .map(s -> new RankSnapshotResponse(
+//                         s.getTier(),
+//                         s.getRank(),
+//                         s.getLeaguePoints(),
+//                         s.getWins(),
+//                         s.getLosses(),
+//                         s.getRecordedAt()
+//                 ))
+//                 .toList();
+//    }
 
     public PlayerResponse getPlayerByName(String region, String gameName, String tagLine) {
         Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
@@ -143,15 +144,15 @@ public class PlayerService {
         return playerToResponse(player);
     }
 
-    public RankSnapshotResponse refreshPlayer(Long id) {
-        Player player = playerRepository.findById(id)
-                .orElseThrow(() -> new PlayerNotFoundByIdException(id));
-
-        return getSoloDuoRank(player.getPuuid(), player.getRegion())
-            .map(rank -> saveRankSnapshot(player, rank))
-            .map(this::toRankSnapshotResponse)
-            .orElseThrow(() -> new SoloDuoRankNotFoundException(id));
-    }
+//    public RankSnapshotResponse refreshPlayerRank(Long id) {
+//        Player player = playerRepository.findById(id)
+//                .orElseThrow(() -> new PlayerNotFoundByIdException(id));
+//
+//        return refreshSoloDuoRank(player.getPuuid(), player.getRegion())
+//            .map(rank -> saveRankSnapshot(player, rank))
+//            .map(this::toRankSnapshotResponse)
+//            .orElseThrow(() -> new SoloDuoRankNotFoundException(player.getPuuid()));
+//    }
 
     private RankSnapshot saveRankSnapshot(Player player, RiotRankResponse rank) {
         RankSnapshot snapshot = new RankSnapshot();
@@ -178,7 +179,7 @@ public class PlayerService {
         );
     }
 
-    private Optional<RiotRankResponse> getSoloDuoRank(String puuid, String region) {
+    private Optional<RiotRankResponse> refreshSoloDuoRank(String puuid, String region) {
         return riotApiService.getRankedStats(
                         puuid,
                         region
@@ -207,9 +208,9 @@ public class PlayerService {
 
     private void refreshPlayerIfChanged(Player player) {
         RiotRankResponse newRank =
-                getSoloDuoRank(player.getPuuid(), player.getRegion())
+                refreshSoloDuoRank(player.getPuuid(), player.getRegion())
                         .orElseThrow(
-                                () -> new SoloDuoRankNotFoundException(player.getId())
+                                () -> new SoloDuoRankNotFoundException(player.getPuuid())
                         );
 
         RankSnapshot latestRankSnapshot = rankSnapshotRepository
@@ -421,11 +422,160 @@ public class PlayerService {
                     new PlayerMatchDataResponse(
                             match.getRiotMatchId(),
                             rawData.info(),
-                            playerMatch.getParticipant()
+                            playerMatch.getParticipant(),
+                            match.getRecordedAt()
                     )
             );
         }
 
         return responses;
+    }
+
+    @Transactional
+    public PlayerRefreshResponse refreshPlayer(String puuid) {
+
+        // refresh rank
+        Player player = playerRepository.findByPuuid(puuid)
+                .orElseThrow(() -> new PlayerNotFoundByPuuidException(puuid));
+
+        // get latest match Ids from Riot
+        RiotRankResponse riotRankResponse = refreshSoloDuoRank(puuid, player.getRegion())
+                .orElseThrow(() -> new SoloDuoRankNotFoundException(puuid));
+
+        // find which matches are already in DB
+        List<String> fetchedMatchIds = riotApiService.getMatchIds(puuid);
+        List<Match> existingMatches =
+                matchRepository.findByRiotMatchIdIn(fetchedMatchIds);
+
+        Set<String> existingMatchIds = new HashSet<>();
+
+        for (Match match : existingMatches) {
+            existingMatchIds.add(match.getRiotMatchId());
+        }
+
+        // fetch data for new matches
+        List<Match> newMatches = new ArrayList<>();
+
+        for (String matchId : fetchedMatchIds) {
+
+            if (!existingMatchIds.contains(matchId)) {
+
+                MatchResponse matchResponse =
+                        riotApiService.getMatchDetails(matchId);
+
+                Match match = new Match(matchResponse);
+
+                newMatches.add(match);
+            }
+        }
+
+        newMatches = matchRepository.saveAll(newMatches);
+
+        // combine all matches
+        List<Match> allMatches = new ArrayList<>(existingMatches);
+        allMatches.addAll(newMatches);
+
+        // find existing playerMatch relationships
+        List<PlayerMatch> existingPlayerMatches =
+                playerMatchRepository.findByPlayer(player);
+
+        Set<Long> linkedMatchIds = new HashSet<>();
+
+        for (PlayerMatch playerMatch : existingPlayerMatches) {
+            linkedMatchIds.add(
+                    playerMatch.getMatch().getId()
+            );
+        }
+
+        // create missing relationships
+        List<PlayerMatch> newPlayerMatches = new ArrayList<>();
+
+        for (Match match : allMatches) {
+
+            if (!linkedMatchIds.contains(match.getId())) {
+                newPlayerMatches.add(
+                        new PlayerMatch(player, match)
+                );
+            }
+        }
+
+        playerMatchRepository.saveAll(newPlayerMatches);
+
+        // reload playerMatches
+        List<PlayerMatch> playerMatches =
+                playerMatchRepository
+                        .findByPlayerAndMatch_RiotMatchIdIn(
+                                player,
+                                fetchedMatchIds
+                        );
+
+        // map by riot match ID
+        Map<String, PlayerMatch> playerMatchesById =
+                new HashMap<>();
+
+        for (PlayerMatch playerMatch : playerMatches) {
+
+            playerMatchesById.put(
+                    playerMatch.getMatch().getRiotMatchId(),
+                    playerMatch
+            );
+        }
+
+        // build frontend match responses in riot's order
+        List<PlayerMatchDataResponse> matchResponses =
+                new ArrayList<>();
+
+        for (String matchId : fetchedMatchIds) {
+
+            PlayerMatch playerMatch =
+                    playerMatchesById.get(matchId);
+
+            if (playerMatch == null) {
+                continue;
+            }
+
+            Match match = playerMatch.getMatch();
+            MatchResponse rawData = match.getRawData();
+
+            matchResponses.add(
+                    new PlayerMatchDataResponse(
+                            match.getRiotMatchId(),
+                            rawData.info(),
+                            playerMatch.getParticipant(),
+                            match.getRecordedAt()
+                    )
+            );
+        }
+
+        // Build refreshed player response
+        PlayerResponse playerResponse = new PlayerResponse(
+                player.getRegion(),
+                player.getGameName(),
+                player.getTagLine()
+        );
+
+        RankSnapshot savedRankSnapshot = saveRankSnapshot(player, riotRankResponse);
+        RankSnapshotResponse refreshedRank = new RankSnapshotResponse(
+                savedRankSnapshot.getTier(),
+                savedRankSnapshot.getRank(),
+                savedRankSnapshot.getLeaguePoints(),
+                savedRankSnapshot.getWins(),
+                savedRankSnapshot.getLosses(),
+                savedRankSnapshot.getRecordedAt()
+        );
+
+
+        PlayerOverviewResponse playerOverviewResponse =
+                new PlayerOverviewResponse (
+                        playerResponse,
+                        refreshedRank
+                );
+
+        // Return everything to frontend
+        return new PlayerRefreshResponse(
+                playerOverviewResponse,
+                matchResponses
+        );
+
     }
 }

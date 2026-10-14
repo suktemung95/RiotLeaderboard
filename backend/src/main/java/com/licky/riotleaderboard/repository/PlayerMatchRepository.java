@@ -16,4 +16,6 @@ public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, Player
             String region,
             List<String> matchIds
     );
+
+    List<PlayerMatch> findByPlayerAndMatch_RiotMatchIdIn(Player player, List<String> matchIds);
 }

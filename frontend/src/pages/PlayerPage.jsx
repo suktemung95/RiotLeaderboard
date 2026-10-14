@@ -57,6 +57,27 @@ export default function PlayerPage() {
     });
   }
 
+  function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const recorded = new Date(timestamp);
+
+    const diffMs = now - recorded;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+    const days = Math.floor(diffHours / 24);
+    const hours = diffHours % 24;
+
+    if (days > 0) {
+      return `${days}d ${hours}h ago`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h ago`;
+    }
+
+    return "Less than 1h ago";
+  }
+
   function formatRole(teamPosition) {
     switch (teamPosition) {
       case "TOP":
@@ -73,6 +94,7 @@ export default function PlayerPage() {
         return teamPosition;
     }
   }
+  
   useEffect(() => {
     async function fetchData() {
       const params = new URLSearchParams({
@@ -142,7 +164,9 @@ export default function PlayerPage() {
           </div>
 
           <button className="refresh-button">
-            ↻ Refresh
+            Last refresh: {formatTimeAgo(matches[0].recordedAt)}
+            <br/>
+            ↻ Refresh Now?
           </button>
         </section>
 
