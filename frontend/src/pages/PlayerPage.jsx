@@ -164,8 +164,10 @@ export default function PlayerPage() {
           </div>
 
           <button className="refresh-button">
-            Last refresh: {formatTimeAgo(matches[0].recordedAt)}
-            <br/>
+            Last refresh: {matches[0]?.recordedAt
+              ? formatTimeAgo(matches[0].recordedAt)
+              : "..."}
+            <br />
             ↻ Refresh Now?
           </button>
         </section>

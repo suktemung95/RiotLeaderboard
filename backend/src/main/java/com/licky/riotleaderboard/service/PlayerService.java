@@ -558,9 +558,9 @@ public class PlayerService {
 
         // Build refreshed player response
         PlayerResponse playerResponse = new PlayerResponse(
-                player.getRegion(),
                 player.getGameName(),
-                player.getTagLine()
+                player.getTagLine(),
+                player.getRegion()
         );
 
         RankSnapshot savedRankSnapshot = saveRankSnapshot(player, riotRankResponse);

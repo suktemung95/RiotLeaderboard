@@ -54,27 +54,27 @@ public class PlayerController {
         );
     }
 
-    @GetMapping("/{id}/history")
-    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
-            @PathVariable Long id
-    ) {
-        return ApiResponses.build(
-                HttpStatus.OK,
-                true,
-                "Retrieved player history",
-                playerService.getPlayerHistory(id)
-        );
-    }
+//    @GetMapping("/{id}/history")
+//    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
+//            @PathVariable Long id
+//    ) {
+//        return ApiResponses.build(
+//                HttpStatus.OK,
+//                true,
+//                "Retrieved player history",
+//                playerService.getPlayerHistory(id)
+//        );
+//    }
 
-    @PostMapping("/{id}/refreshRank")
-    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayerRank(@PathVariable Long id) {
-        return ApiResponses.build(
-                HttpStatus.OK,
-                true,
-                "Refreshed player rank snapshot",
-                playerService.refreshPlayerRank(id)
-        );
-    }
+//    @PostMapping("/{id}/refreshRank")
+//    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayerRank(@PathVariable Long id) {
+//        return ApiResponses.build(
+//                HttpStatus.OK,
+//                true,
+//                "Refreshed player rank snapshot",
+//                playerService.refreshPlayerRank(id)
+//        );
+//    }
 
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<PlayerOverviewResponse>> getPlayerOverview(
