@@ -66,7 +66,9 @@ public class PlayerService {
         Player savedPlayer = playerRepository.save(player);
 
         refreshSoloDuoRank(savedPlayer.getPuuid(), savedPlayer.getRegion())
-            .ifPresent(rank -> saveRankSnapshot(savedPlayer, rank));
+            .ifPresent(rank ->
+                    rankSnapshotRepository.save(new RankSnapshot(savedPlayer, rank))
+            );
 
         return savedPlayer;
     }
@@ -159,20 +161,6 @@ public class PlayerService {
 //            .orElseThrow(() -> new SoloDuoRankNotFoundException(player.getPuuid()));
 //    }
 
-    private RankSnapshot saveRankSnapshot(Player player, RiotRankResponse rank) {
-        RankSnapshot snapshot = new RankSnapshot();
-
-        snapshot.setPlayer(player);
-        snapshot.setTier(rank.tier());
-        snapshot.setRank(rank.rank());
-        snapshot.setLeaguePoints(rank.leaguePoints());
-        snapshot.setWins(rank.wins());
-        snapshot.setLosses(rank.losses());
-        snapshot.setRecordedAt(LocalDateTime.now());
-
-        return rankSnapshotRepository.save(snapshot);
-    }
-
     private Optional<RiotRankResponse> refreshSoloDuoRank(String puuid, String region) {
         return riotApiService.getRankedStats(
                         puuid,
@@ -215,7 +203,7 @@ public class PlayerService {
                 latestRankSnapshot == null
                 || isRankChanged(latestRankSnapshot, newRank)
         ) {
-            saveRankSnapshot(player, newRank);
+            rankSnapshotRepository.save(new RankSnapshot(player, newRank));
         }
     }
 
@@ -557,7 +545,8 @@ public class PlayerService {
                 player.getRegion()
         );
 
-        RankSnapshot savedRankSnapshot = saveRankSnapshot(player, riotRankResponse);
+        RankSnapshot savedRankSnapshot = new RankSnapshot(player, riotRankResponse);
+        rankSnapshotRepository.save(savedRankSnapshot);
         RankSnapshotResponse refreshedRank = new RankSnapshotResponse(
                 savedRankSnapshot.getTier(),
                 savedRankSnapshot.getRank(),
