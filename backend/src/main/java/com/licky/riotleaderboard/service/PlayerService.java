@@ -547,15 +547,7 @@ public class PlayerService {
 
         RankSnapshot savedRankSnapshot = new RankSnapshot(player, riotRankResponse);
         rankSnapshotRepository.save(savedRankSnapshot);
-        RankSnapshotResponse refreshedRank = new RankSnapshotResponse(
-                savedRankSnapshot.getTier(),
-                savedRankSnapshot.getRank(),
-                savedRankSnapshot.getLeaguePoints(),
-                savedRankSnapshot.getWins(),
-                savedRankSnapshot.getLosses(),
-                savedRankSnapshot.getRecordedAt()
-        );
-
+        RankSnapshotResponse refreshedRank = new RankSnapshotResponse(savedRankSnapshot);
 
         PlayerOverviewResponse playerOverviewResponse =
                 new PlayerOverviewResponse (
