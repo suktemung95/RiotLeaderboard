@@ -10,6 +10,7 @@ export default function PlayerPage() {
 
   const [matches, setMatches] = useState([]);
   const [player, setPlayer] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { region, gameName, tagLine } = useParams();
 
@@ -62,10 +63,11 @@ export default function PlayerPage() {
     const recorded = new Date(timestamp);
 
     const diffMs = now - recorded;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
 
-    const days = Math.floor(diffHours / 24);
-    const hours = diffHours % 24;
+    const days = Math.floor(diffMinutes / (60 * 24));
+    const hours = Math.floor((diffMinutes % (60 * 24)) / 60);
+    const minutes = diffMinutes % 60
 
     if (days > 0) {
       return `${days}d ${hours}h ago`;
@@ -75,7 +77,11 @@ export default function PlayerPage() {
       return `${hours}h ago`;
     }
 
-    return "Less than 1h ago";
+    if (minutes > 5) {
+      return "Less than 1h ago";
+    }
+    
+    return "Just now"
   }
 
   function formatRole(teamPosition) {
@@ -92,6 +98,36 @@ export default function PlayerPage() {
         return "SUPPORT";
       default:
         return teamPosition;
+    }
+  }
+
+  async function refreshPlayer() {
+
+    try {
+      setRefreshing(true)
+      const params = new URLSearchParams({
+        region,
+        gameName,
+        tagLine
+      });
+
+      const response = await fetch(
+        URL_BASE + `players/refresh?${params}`,
+        {
+          method: "POST"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh player");
+      }
+
+      const result = await response.json();
+
+      setPlayer(result.data.playerOverview);
+      setMatches(result.data.matchesData);
+    } finally {
+      setRefreshing(false)
     }
   }
   
@@ -163,12 +199,18 @@ export default function PlayerPage() {
             <p>Ranked Solo / Duo</p>
           </div>
 
-          <button className="refresh-button">
-            Last refresh: {matches[0]?.recordedAt
-              ? formatTimeAgo(matches[0].recordedAt)
-              : "..."}
+          <button 
+            className="refresh-button"
+            onClick={refreshPlayer}
+            disabled={refreshing}
+          >
+            Last refresh:  {
+              player?.rankSnapshotResponse?.recordedAt
+              ? formatTimeAgo(player.rankSnapshotResponse.recordedAt)
+              : "..."
+            }
             <br />
-            ↻ Refresh Now?
+            {refreshing ? "Refreshing..." : "↻ Refresh Now?"}
           </button>
         </section>
 
