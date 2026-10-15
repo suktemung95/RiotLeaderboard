@@ -147,8 +147,7 @@ public class PlayerService {
         )
                 .orElseThrow(() -> new PlayerNotFoundByNameException(region, gameName, tagLine));
 
-
-        return playerToResponse(player);
+        return new PlayerResponse(player);
     }
 
 //    public RankSnapshotResponse refreshPlayerRank(Long id) {
@@ -243,25 +242,6 @@ public class PlayerService {
         };
     }
 
-    private PlayerResponse playerToResponse(Player player) {
-        return new PlayerResponse(
-                player.getGameName(),
-                player.getTagLine(),
-                player.getRegion()
-        );
-    }
-
-    private RankSnapshotResponse rankSnapshotToResponse(RankSnapshot snapshot) {
-        return new RankSnapshotResponse(
-                snapshot.getTier(),
-                snapshot.getRank(),
-                snapshot.getLeaguePoints(),
-                snapshot.getWins(),
-                snapshot.getLosses(),
-                snapshot.getRecordedAt()
-        );
-    }
-
     public PlayerOverviewResponse getPlayerOverview(
             PlayerRequest playerRequest
     ) {
@@ -276,8 +256,8 @@ public class PlayerService {
                 .findTopByPlayerOrderByRecordedAtDesc(p)
                 .orElseThrow(() -> new RankSnapshotNotFoundException(p.getId()));
 
-        PlayerResponse pr = playerToResponse(p);
-        RankSnapshotResponse rsr = rankSnapshotToResponse(rs);
+        PlayerResponse pr = new PlayerResponse(p);
+        RankSnapshotResponse rsr = new RankSnapshotResponse(rs);
 
         return new PlayerOverviewResponse(pr, rsr);
 
@@ -539,11 +519,7 @@ public class PlayerService {
         }
 
         // Build refreshed player response
-        PlayerResponse playerResponse = new PlayerResponse(
-                player.getGameName(),
-                player.getTagLine(),
-                player.getRegion()
-        );
+        PlayerResponse playerResponse = new PlayerResponse(player);
 
         RankSnapshot savedRankSnapshot = new RankSnapshot(player, riotRankResponse);
         rankSnapshotRepository.save(savedRankSnapshot);
