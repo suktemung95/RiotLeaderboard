@@ -1,8 +1,7 @@
 # current
-- refreshPlayer + Matches
+- clean up unnecessary functions in PlayerController + Service
 
 # next
-- clean up unnecessary functions in PlayerController + Service
 - caching players
 - make sure all data calls are retrieved from database first, then API
   - on this note, make sure the database or even cache returns, then somehow make an API refresh
@@ -11,6 +10,7 @@
 - possibly remove (or create new + smaller) DTO for Participants that doesn't include user information (unnecessary)
 
 # Done
+- refreshPlayer + Matches
 - find other information to add to PlayerMatchDataResponse DTO (teammates, gameDuration, queueId (or name), role(s), items, gold (differential))
 - add "teamPosition" to participants DTO to replace role
 - standardize the return from riotApi calls

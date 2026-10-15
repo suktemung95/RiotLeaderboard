@@ -41,7 +41,6 @@ public class PlayerController {
         );
     }
 
-
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<PlayerResponse>> searchPlayer(
             @ModelAttribute PlayerRequest pr
@@ -54,17 +53,17 @@ public class PlayerController {
         );
     }
 
-//    @GetMapping("/{id}/history")
-//    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
-//            @PathVariable Long id
-//    ) {
-//        return ApiResponses.build(
-//                HttpStatus.OK,
-//                true,
-//                "Retrieved player history",
-//                playerService.getPlayerHistory(id)
-//        );
-//    }
+    @GetMapping("/{id}/history")
+    public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
+            @ModelAttribute PlayerRequest playerRequest
+    ) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "Retrieved player history",
+                playerService.getPlayerHistory(playerRequest)
+        );
+    }
 
 //    @PostMapping("/{id}/refreshRank")
 //    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayerRank(@PathVariable Long id) {

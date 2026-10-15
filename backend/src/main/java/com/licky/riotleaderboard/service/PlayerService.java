@@ -115,24 +115,28 @@ public class PlayerService {
         return responses;
     }
 
-//    public List<RankSnapshotResponse> getPlayerHistory(Long id) {
-//
-//         Player player = playerRepository.findById(id)
-//                 .orElseThrow(() -> new PlayerNotFoundByIdException(id));
-//
-//         return rankSnapshotRepository
-//                 .findByPlayerOrderByRecordedAtDesc(player)
-//                 .stream()
-//                 .map(s -> new RankSnapshotResponse(
-//                         s.getTier(),
-//                         s.getRank(),
-//                         s.getLeaguePoints(),
-//                         s.getWins(),
-//                         s.getLosses(),
-//                         s.getRecordedAt()
-//                 ))
-//                 .toList();
-//    }
+    public List<RankSnapshotResponse> getPlayerHistory(PlayerRequest pr) {
+
+         Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+                 pr.region(),
+                 pr.gameName(),
+                 pr.tagLine()
+                 )
+                 .orElseThrow(() -> new PlayerNotFoundByNameException(pr));
+
+         return rankSnapshotRepository
+                 .findByPlayerOrderByRecordedAtDesc(player)
+                 .stream()
+                 .map(s -> new RankSnapshotResponse(
+                         s.getTier(),
+                         s.getRank(),
+                         s.getLeaguePoints(),
+                         s.getWins(),
+                         s.getLosses(),
+                         s.getRecordedAt()
+                 ))
+                 .toList();
+    }
 
     public PlayerResponse getPlayerByName(String region, String gameName, String tagLine) {
         Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
