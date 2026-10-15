@@ -1,5 +1,6 @@
 # current
 - clean up unnecessary functions in PlayerController + Service
+- divide refresh function into multiple helpers
 
 # next
 - caching players

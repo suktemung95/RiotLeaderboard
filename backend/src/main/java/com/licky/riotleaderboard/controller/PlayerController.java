@@ -65,16 +65,6 @@ public class PlayerController {
         );
     }
 
-//    @PostMapping("/{id}/refreshRank")
-//    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayerRank(@PathVariable Long id) {
-//        return ApiResponses.build(
-//                HttpStatus.OK,
-//                true,
-//                "Refreshed player rank snapshot",
-//                playerService.refreshPlayerRank(id)
-//        );
-//    }
-
     @GetMapping("/overview")
     public ResponseEntity<ApiResponse<PlayerOverviewResponse>> getPlayerOverview(
             @ModelAttribute PlayerRequest playerRequest

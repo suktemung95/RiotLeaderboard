@@ -122,7 +122,9 @@ public class PlayerService {
                  pr.gameName(),
                  pr.tagLine()
                  )
-                 .orElseThrow(() -> new PlayerNotFoundByNameException(pr));
+                 .orElseThrow(() -> new PlayerNotFoundByNameException(
+                         pr.region(), pr.gameName(), pr.tagLine())
+                 );
 
          return rankSnapshotRepository
                  .findByPlayerOrderByRecordedAtDesc(player)
