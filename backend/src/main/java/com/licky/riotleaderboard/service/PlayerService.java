@@ -63,7 +63,6 @@ public class PlayerService {
         player.setTagLine(riotAccount.tagLine());
         player.setRegion(request.region());
 
-
         Player savedPlayer = playerRepository.save(player);
 
         refreshSoloDuoRank(savedPlayer.getPuuid(), savedPlayer.getRegion())
@@ -172,17 +171,6 @@ public class PlayerService {
         snapshot.setRecordedAt(LocalDateTime.now());
 
         return rankSnapshotRepository.save(snapshot);
-    }
-
-    private RankSnapshotResponse toRankSnapshotResponse(RankSnapshot snapshot) {
-        return new RankSnapshotResponse(
-                snapshot.getTier(),
-                snapshot.getRank(),
-                snapshot.getLeaguePoints(),
-                snapshot.getWins(),
-                snapshot.getLosses(),
-                snapshot.getRecordedAt()
-        );
     }
 
     private Optional<RiotRankResponse> refreshSoloDuoRank(String puuid, String region) {
