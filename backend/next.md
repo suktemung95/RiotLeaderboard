@@ -1,5 +1,6 @@
 # current
 - clean up unnecessary functions in PlayerController + Service
+  - already done with constructors (converting types)
 - divide refresh function into multiple helpers
 
 # next
