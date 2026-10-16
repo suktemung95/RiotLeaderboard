@@ -1,5 +1,6 @@
 package com.licky.riotleaderboard.model;
 
+import com.licky.riotleaderboard.dto.RiotRankResponse;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,16 @@ public class RankSnapshot {
     private Integer wins;
     private Integer losses;
     private LocalDateTime recordedAt;
+
+    public RankSnapshot(Player player, RiotRankResponse rank) {
+        this.player = player;
+        this.tier = rank.tier();
+        this.rank = rank.rank();
+        this.leaguePoints = rank.leaguePoints();
+        this.wins = rank.wins();
+        this.losses = rank.losses();
+        this.recordedAt = LocalDateTime.now();
+    }
 
     public Long getId() {
         return id;

@@ -10,6 +10,7 @@ export default function PlayerPage() {
 
   const [matches, setMatches] = useState([]);
   const [player, setPlayer] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const { region, gameName, tagLine } = useParams();
 
@@ -40,6 +41,12 @@ export default function PlayerPage() {
     }
   }
 
+  function getRankEmblem(tier) {
+    if (!tier) return null;
+
+    return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/ranked-emblem/emblem-${tier.toLowerCase()}.png`;
+  }
+
   function formatGameDate(timestamp) {
     const date = new Date(timestamp);
 
@@ -49,6 +56,32 @@ export default function PlayerPage() {
       hour: "numeric",
       minute: "2-digit"
     });
+  }
+
+  function formatTimeAgo(timestamp) {
+    const now = new Date();
+    const recorded = new Date(timestamp);
+
+    const diffMs = now - recorded;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    const days = Math.floor(diffMinutes / (60 * 24));
+    const hours = Math.floor((diffMinutes % (60 * 24)) / 60);
+    const minutes = diffMinutes % 60
+
+    if (days > 0) {
+      return `${days}d ${hours}h ago`;
+    }
+
+    if (hours > 0) {
+      return `${hours}h ago`;
+    }
+
+    if (minutes > 5) {
+      return "Less than 1h ago";
+    }
+    
+    return "Just now"
   }
 
   function formatRole(teamPosition) {
@@ -67,6 +100,37 @@ export default function PlayerPage() {
         return teamPosition;
     }
   }
+
+  async function refreshPlayer() {
+
+    try {
+      setRefreshing(true)
+      const params = new URLSearchParams({
+        region,
+        gameName,
+        tagLine
+      });
+
+      const response = await fetch(
+        URL_BASE + `players/refresh?${params}`,
+        {
+          method: "POST"
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to refresh player");
+      }
+
+      const result = await response.json();
+
+      setPlayer(result.data.playerOverview);
+      setMatches(result.data.matchesData);
+    } finally {
+      setRefreshing(false)
+    }
+  }
+  
   useEffect(() => {
     async function fetchData() {
       const params = new URLSearchParams({
@@ -135,8 +199,18 @@ export default function PlayerPage() {
             <p>Ranked Solo / Duo</p>
           </div>
 
-          <button className="refresh-button">
-            ↻ Refresh
+          <button 
+            className="refresh-button"
+            onClick={refreshPlayer}
+            disabled={refreshing}
+          >
+            Last refresh:  {
+              player?.rankSnapshotResponse?.recordedAt
+              ? formatTimeAgo(player.rankSnapshotResponse.recordedAt)
+              : "..."
+            }
+            <br />
+            {refreshing ? "Refreshing..." : "↻ Refresh Now?"}
           </button>
         </section>
 
@@ -145,7 +219,14 @@ export default function PlayerPage() {
             <div className="card-label">CURRENT RANK</div>
 
             <div className="rank-content">
-              <div className="rank-emblem">◆</div>
+              <div className="rank-emblem">
+                {player && (
+                  <img
+                    src={getRankEmblem(player.rankSnapshotResponse.tier)}
+                    alt={`${player.rankSnapshotResponse.tier} rank`}
+                  />
+                )}
+              </div>
 
               <div>
                 <h2>{player ? player.rankSnapshotResponse.tier : '...'} {player && player.rankSnapshotResponse.rank}</h2>

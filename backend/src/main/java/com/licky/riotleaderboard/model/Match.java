@@ -38,7 +38,7 @@ public class Match {
         return riotMatchId;
     }
 
-    public LocalDateTime getRecorded_at() {
+    public LocalDateTime getRecordedAt() {
         return recordedAt;
     }
 

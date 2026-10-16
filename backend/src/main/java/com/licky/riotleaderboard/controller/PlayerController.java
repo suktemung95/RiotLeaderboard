@@ -41,25 +41,27 @@ public class PlayerController {
         );
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PlayerResponse>> searchPlayer(
+            @ModelAttribute PlayerRequest pr
+    ) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "retrieved player",
+                playerService.getPlayerByName(pr.region(), pr.gameName(), pr.tagLine())
+        );
+    }
+
     @GetMapping("/{id}/history")
     public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
-            @PathVariable Long id
+            @ModelAttribute PlayerRequest playerRequest
     ) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
                 "Retrieved player history",
-                playerService.getPlayerHistory(id)
-        );
-    }
-
-    @PostMapping("/{id}/refresh")
-    public ResponseEntity<ApiResponse<RankSnapshotResponse>> refreshPlayer(@PathVariable Long id) {
-        return ApiResponses.build(
-                HttpStatus.OK,
-                true,
-                "Refreshed player rank snapshot",
-                playerService.refreshPlayer(id)
+                playerService.getPlayerHistory(playerRequest)
         );
     }
 
@@ -84,6 +86,17 @@ public class PlayerController {
                 true,
                 "Player matches returned successfully",
                 playerService.getPlayerMatches(playerRequest)
+        );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<PlayerRefreshResponse>> refreshPlayer(
+            @ModelAttribute PlayerRequest playerRequest) {
+        return ApiResponses.build(
+                HttpStatus.OK,
+                true,
+                "Player refreshed successfully",
+                playerService.refreshPlayer(playerRequest)
         );
     }
 }
