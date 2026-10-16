@@ -41,18 +41,6 @@ public class PlayerController {
         );
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<ApiResponse<PlayerResponse>> searchPlayer(
-            @ModelAttribute PlayerRequest pr
-    ) {
-        return ApiResponses.build(
-                HttpStatus.OK,
-                true,
-                "retrieved player",
-                playerService.getPlayerByName(pr.region(), pr.gameName(), pr.tagLine())
-        );
-    }
-
     @GetMapping("/{id}/history")
     public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
             @ModelAttribute PlayerRequest playerRequest
