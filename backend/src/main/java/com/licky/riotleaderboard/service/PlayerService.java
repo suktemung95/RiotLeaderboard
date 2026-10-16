@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -167,7 +168,7 @@ public class PlayerService {
         for (Player player : players) {
 
             try {
-                refreshRankIfChanged(player);
+                refreshRankSnapshot(player);
             } catch (Exception e) {
                 errors.add(e.getMessage());
             }
@@ -176,7 +177,7 @@ public class PlayerService {
         System.out.println("Errors when refreshing: " + errors);
     }
 
-    private void refreshRankIfChanged(Player player) {
+    private void refreshRankSnapshot(Player player) {
         RiotRankResponse newRank =
                 refreshSoloDuoRank(player.getPuuid(), player.getRegion())
                         .orElseThrow(
@@ -187,22 +188,11 @@ public class PlayerService {
                 .findTopByPlayerOrderByRecordedAtDesc(player)
                 .orElseThrow(() -> new RankSnapshotNotFoundException(player.getId()));
 
-        if (
-                latestRankSnapshot == null
-                || isRankChanged(latestRankSnapshot, newRank)
-        ) {
-            rankSnapshotRepository.save(new RankSnapshot(player, newRank));
-        }
-    }
+        RankSnapshot newRankSnapshot = new RankSnapshot(player, newRank);
 
-    private boolean isRankChanged(
-            RankSnapshot latestRankSnapshot,
-            RiotRankResponse newRank) {
-        return (
-                !Objects.equals(newRank.tier(), latestRankSnapshot.getTier()) ||
-                !Objects.equals(newRank.rank(), latestRankSnapshot.getRank()) ||
-                !Objects.equals(newRank.leaguePoints(), latestRankSnapshot.getLeaguePoints())
-        );
+        if (!latestRankSnapshot.hasSameRank(newRankSnapshot) || latestRankSnapshot.getRecordedAt().isBefore(LocalDateTime.now().minusHours(1))) {
+            rankSnapshotRepository.save(newRankSnapshot);
+        }
     }
 
     private int tierValue(String tier) {

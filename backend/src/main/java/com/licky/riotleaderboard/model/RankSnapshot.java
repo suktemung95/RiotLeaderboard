@@ -4,6 +4,7 @@ import com.licky.riotleaderboard.dto.RiotRankResponse;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "rank_snapshots")
@@ -30,6 +31,8 @@ public class RankSnapshot {
         this.losses = rank.losses();
         this.recordedAt = LocalDateTime.now();
     }
+
+    public RankSnapshot() {}
 
     public Long getId() {
         return id;
@@ -90,4 +93,13 @@ public class RankSnapshot {
     public void setRecordedAt(LocalDateTime recordedAt) {
         this.recordedAt = recordedAt;
     }
+
+    public boolean hasSameRank(RankSnapshot that) {
+        return Objects.equals(this.getTier(), that.getTier()) &&
+                Objects.equals(this.getRank(), that.getRank()) &&
+                Objects.equals(this.getLeaguePoints(), that.getLeaguePoints()) &&
+                Objects.equals(this.getWins(), that.getWins()) &&
+                Objects.equals(this.getLosses(), that.getLosses());
+    }
+
 }
