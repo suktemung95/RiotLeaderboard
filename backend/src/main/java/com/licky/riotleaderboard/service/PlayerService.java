@@ -1,7 +1,6 @@
 package com.licky.riotleaderboard.service;
 
 import com.licky.riotleaderboard.dto.*;
-import com.licky.riotleaderboard.exception.PlayerNotFoundByPuuidException;
 import com.licky.riotleaderboard.exception.PlayerNotFoundByNameException;
 import com.licky.riotleaderboard.exception.RankSnapshotNotFoundException;
 import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
@@ -17,7 +16,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -141,7 +139,7 @@ public class PlayerService {
                  .toList();
     }
 
-//    public RankSnapshotResponse refreshPlayerRank(Long id) {
+    //    public RankSnapshotResponse refreshPlayerRank(Long id) {
 //        Player player = playerRepository.findById(id)
 //                .orElseThrow(() -> new PlayerNotFoundByIdException(id));
 //
@@ -169,16 +167,16 @@ public class PlayerService {
         for (Player player : players) {
 
             try {
-                refreshPlayerIfChanged(player);
+                refreshRankIfChanged(player);
             } catch (Exception e) {
                 errors.add(e.getMessage());
             }
         }
 
-        System.out.println(errors);
+        System.out.println("Errors when refreshing: " + errors);
     }
 
-    private void refreshPlayerIfChanged(Player player) {
+    private void refreshRankIfChanged(Player player) {
         RiotRankResponse newRank =
                 refreshSoloDuoRank(player.getPuuid(), player.getRegion())
                         .orElseThrow(
