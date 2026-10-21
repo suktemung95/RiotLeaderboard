@@ -158,31 +158,16 @@ public class PlayerService {
         for (Player player : players) {
 
             try {
-                refreshRankSnapshot(player);
+                refreshPlayerData(new PlayerRequest(player));
             } catch (Exception e) {
-                errors.add(e.getMessage());
+                errors.add(
+                    player.getGameName() + "#" + player.getTagLine()
+                            + ": " + e.getMessage()
+                );
             }
         }
 
         System.out.println("Errors when refreshing: " + errors);
-    }
-
-    private void refreshRankSnapshot(Player player) {
-        RiotRankResponse newRank =
-                refreshSoloDuoRank(player.getPuuid(), player.getRegion())
-                        .orElseThrow(
-                                () -> new SoloDuoRankNotFoundException(player.getPuuid())
-                        );
-
-        RankSnapshot latestRankSnapshot = rankSnapshotRepository
-                .findTopByPlayerOrderByRecordedAtDesc(player)
-                .orElseThrow(() -> new RankSnapshotNotFoundException(player.getId()));
-
-        RankSnapshot newRankSnapshot = new RankSnapshot(player, newRank);
-
-        if (!latestRankSnapshot.hasSameRank(newRankSnapshot) || latestRankSnapshot.getRecordedAt().isBefore(LocalDateTime.now().minusHours(1))) {
-            rankSnapshotRepository.save(newRankSnapshot);
-        }
     }
 
     private int tierValue(String tier) {
