@@ -18,4 +18,10 @@ public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, Player
     );
 
     List<PlayerMatch> findByPlayerAndMatch_RiotMatchIdIn(Player player, List<String> matchIds);
+    List<PlayerMatch> findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(Player player);
+    List<PlayerMatch>
+    findByPlayerAndMatch_RiotMatchIdInOrderByMatch_GameStartTimestampDesc(
+            Player player,
+            List<String> riotMatchIds
+    );
 }

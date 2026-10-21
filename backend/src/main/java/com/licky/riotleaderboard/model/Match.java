@@ -22,12 +22,16 @@ public class Match {
     @Column(columnDefinition = "jsonb", nullable = false)
     private MatchResponse rawData;
 
+    @Column(name = "game_start_timestamp", nullable = false)
+    private Long gameStartTimestamp;
+
     public Match() {};
 
     public Match(MatchResponse matchResponse) {
         this.riotMatchId = matchResponse.metadata().matchId();
         this.recordedAt = LocalDateTime.now();
         this.rawData = matchResponse;
+        this.gameStartTimestamp = matchResponse.info().gameStartTimestamp();
     }
 
     public Long getId() {
@@ -44,5 +48,9 @@ public class Match {
 
     public MatchResponse getRawData() {
         return rawData;
+    }
+
+    public Long getGameStartTimestamp() {
+        return gameStartTimestamp;
     }
 }

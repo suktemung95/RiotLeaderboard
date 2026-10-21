@@ -234,132 +234,16 @@ public class PlayerService {
 
     public List<PlayerMatchDataResponse> getPlayerMatches(PlayerRequest playerRequest) {
 
-        Player player = playerRepository
-                .findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
-                        playerRequest.region(),
-                        playerRequest.gameName(),
-                        playerRequest.tagLine()
-                )
-                .orElseThrow(() -> new PlayerNotFoundByNameException(
-                        playerRequest.region(),
-                        playerRequest.gameName(),
-                        playerRequest.tagLine()
-                ));
+        Player player = findPlayerByPlayerRequest(playerRequest);
 
-        String puuid = player.getPuuid();
-
-        // Get most recent match IDs from Riot
-        List<String> fetchedMatchIds = riotApiService.getMatchIds(puuid);
-
-        // Find which matches we already have
-        List<Match> existingMatches =
-                matchRepository.findByRiotMatchIdIn(fetchedMatchIds);
-
-        Set<String> existingMatchIds = new HashSet<>();
-
-        for (Match match : existingMatches) {
-            existingMatchIds.add(match.getRiotMatchId());
-        }
-
-        // Determine which Riot matches are missing from our database
-        List<String> newMatchIds = new ArrayList<>();
-
-        for (String matchId : fetchedMatchIds) {
-            if (!existingMatchIds.contains(matchId)) {
-                newMatchIds.add(matchId);
-            }
-        }
-
-        // Fetch and create missing matches
-        List<Match> newMatches = new ArrayList<>();
-
-        for (String matchId : newMatchIds) {
-            MatchResponse matchResponse =
-                    riotApiService.getMatchDetails(matchId);
-
-            newMatches.add(new Match(matchResponse));
-        }
-
-        // Save them before creating PlayerMatch relationships
-        newMatches = matchRepository.saveAll(newMatches);
-
-        // All matches relevant to this request
-        List<Match> allMatches = new ArrayList<>(existingMatches);
-        allMatches.addAll(newMatches);
-
-        // Find which relationships already exist for this player
-        Set<Long> existingPlayerMatchIds = new HashSet<>();
-
-        for (PlayerMatch playerMatch :
-                playerMatchRepository.findByPlayer(player)) {
-
-            existingPlayerMatchIds.add(
-                    playerMatch.getMatch().getId()
-            );
-        }
-
-        // Create missing PlayerMatch relationships
-        List<PlayerMatch> newPlayerMatches = new ArrayList<>();
-
-        for (Match match : allMatches) {
-            if (!existingPlayerMatchIds.contains(match.getId())) {
-                newPlayerMatches.add(
-                        new PlayerMatch(player, match)
-                );
-            }
-        }
-
-        playerMatchRepository.saveAll(newPlayerMatches);
-
-        // Now retrieve the PlayerMatch rows needed for the response
         List<PlayerMatch> playerMatches =
-                playerMatchRepository
-                        .findByPlayer_GameNameIgnoreCaseAndPlayer_TagLineIgnoreCaseAndPlayer_RegionIgnoreCaseAndMatch_RiotMatchIdIn(
-                                playerRequest.gameName(),
-                                playerRequest.tagLine(),
-                                playerRequest.region(),
-                                fetchedMatchIds
-                        );
+                playerMatchRepository.findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(player);
 
-        /*
-         * Repository IN queries do not guarantee that the result order
-         * matches fetchedMatchIds, so index them by Riot match ID.
-         */
-        Map<String, PlayerMatch> matchesById = new HashMap<>();
-
-        for (PlayerMatch playerMatch : playerMatches) {
-            matchesById.put(
-                    playerMatch.getMatch().getRiotMatchId(),
-                    playerMatch
-            );
+        if (playerMatches.size() < 20) {
+            return refreshMatches(player);
         }
 
-        // Build responses in the same order Riot returned the IDs
-        List<PlayerMatchDataResponse> responses =
-                new ArrayList<>();
-
-        for (String matchId : fetchedMatchIds) {
-
-            PlayerMatch playerMatch = matchesById.get(matchId);
-
-            if (playerMatch == null) {
-                continue;
-            }
-
-            Match match = playerMatch.getMatch();
-            MatchResponse rawData = match.getRawData();
-
-            responses.add(
-                    new PlayerMatchDataResponse(
-                            match.getRiotMatchId(),
-                            rawData.info(),
-                            playerMatch.getParticipant(),
-                            match.getRecordedAt()
-                    )
-            );
-        }
-
-        return responses;
+        return playerMatchesToDataResponse(playerMatches);
     }
 
     private Player findPlayerByPlayerRequest(PlayerRequest playerRequest) {
@@ -425,52 +309,13 @@ public class PlayerService {
 
         synchronizePlayerMatches(player, allMatches);
 
-        // reload playerMatches
         List<PlayerMatch> playerMatches =
-                playerMatchRepository
-                        .findByPlayerAndMatch_RiotMatchIdIn(
-                                player,
-                                fetchedMatchIds
-                        );
-
-        // map by riot match ID
-        Map<String, PlayerMatch> playerMatchesById =
-                new HashMap<>();
-
-        for (PlayerMatch playerMatch : playerMatches) {
-            playerMatchesById.put(
-                    playerMatch.getMatch().getRiotMatchId(),
-                    playerMatch
+                playerMatchRepository.findByPlayerAndMatch_RiotMatchIdInOrderByMatch_GameStartTimestampDesc(
+                    player,
+                    fetchedMatchIds
             );
-        }
 
-        // build frontend match responses in riot's order
-        List<PlayerMatchDataResponse> matchResponses =
-                new ArrayList<>();
-
-        for (String matchId : fetchedMatchIds) {
-
-            PlayerMatch playerMatch =
-                    playerMatchesById.get(matchId);
-
-            if (playerMatch == null) {
-                continue;
-            }
-
-            Match match = playerMatch.getMatch();
-            MatchResponse rawData = match.getRawData();
-
-            matchResponses.add(
-                    new PlayerMatchDataResponse(
-                            match.getRiotMatchId(),
-                            rawData.info(),
-                            playerMatch.getParticipant(),
-                            match.getRecordedAt()
-                    )
-            );
-        }
-
-        return matchResponses;
+        return playerMatchesToDataResponse(playerMatches);
     }
 
     private void synchronizePlayerMatches(Player player, List<Match> matches) {
@@ -498,6 +343,29 @@ public class PlayerService {
         }
 
         playerMatchRepository.saveAll(newPlayerMatches);
+    }
+
+    private List<PlayerMatchDataResponse> playerMatchesToDataResponse(
+            List<PlayerMatch> playerMatches
+    ) {
+        List<PlayerMatchDataResponse> responses = new ArrayList<>();
+
+        for (PlayerMatch playerMatch : playerMatches) {
+
+            Match match = playerMatch.getMatch();
+            MatchResponse rawData = match.getRawData();
+
+            responses.add(
+                    new PlayerMatchDataResponse(
+                            match.getRiotMatchId(),
+                            rawData.info(),
+                            playerMatch.getParticipant(),
+                            match.getRecordedAt()
+                    )
+            );
+        }
+
+        return responses;
     }
 
     @Transactional
