@@ -27,12 +27,15 @@ public class PlayerRefreshScheduler {
     @Scheduled(fixedRate = 900000)
     public void refreshAll() {
         List<Player> players = playerRepository.findAll();
+        List<String> successfulPlayersRefreshed = new ArrayList<>();
         List<String> errors = new ArrayList<>();
 
         for (Player player : players) {
 
             try {
                 playerService.refreshPlayerData(new PlayerRequest(player));
+                successfulPlayersRefreshed.add(
+                        player.getRegion() + ": " + player.getGameName() + "#" + player.getTagLine());
             } catch (Exception e) {
                 errors.add(
                         player.getGameName() + "#" + player.getTagLine()
@@ -40,7 +43,7 @@ public class PlayerRefreshScheduler {
                 );
             }
         }
-
+        System.out.println("Succesfully refreshed: " + successfulPlayersRefreshed);
         System.out.println("Errors when refreshing: " + errors);
     }
 }
