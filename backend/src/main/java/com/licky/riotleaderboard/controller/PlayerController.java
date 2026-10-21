@@ -84,7 +84,7 @@ public class PlayerController {
                 HttpStatus.OK,
                 true,
                 "Player refreshed successfully",
-                playerService.refreshPlayer(playerRequest)
+                playerService.refreshPlayerData(playerRequest)
         );
     }
 }

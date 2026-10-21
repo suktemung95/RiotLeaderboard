@@ -140,16 +140,6 @@ public class PlayerService {
                  .toList();
     }
 
-    //    public RankSnapshotResponse refreshPlayerRank(Long id) {
-//        Player player = playerRepository.findById(id)
-//                .orElseThrow(() -> new PlayerNotFoundByIdException(id));
-//
-//        return refreshSoloDuoRank(player.getPuuid(), player.getRegion())
-//            .map(rank -> saveRankSnapshot(player, rank))
-//            .map(this::toRankSnapshotResponse)
-//            .orElseThrow(() -> new SoloDuoRankNotFoundException(player.getPuuid()));
-//    }
-
     private Optional<RiotRankResponse> refreshSoloDuoRank(String puuid, String region) {
         return riotApiService.getRankedStats(
                         puuid,
@@ -372,27 +362,36 @@ public class PlayerService {
         return responses;
     }
 
-    @Transactional
-    public PlayerRefreshResponse refreshPlayer(PlayerRequest playerRequest) {
-
-        // refresh rank
-        Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
-                    playerRequest.region(),
-                    playerRequest.gameName(),
-                    playerRequest.tagLine()
+    private Player findPlayerByPlayerRequest(PlayerRequest playerRequest) {
+        return playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
+                        playerRequest.region(),
+                        playerRequest.gameName(),
+                        playerRequest.tagLine()
                 )
                 .orElseThrow(() -> new PlayerNotFoundByNameException(
                         playerRequest.region(),
                         playerRequest.gameName(),
                         playerRequest.tagLine()
                 ));
+    }
+
+    private RankSnapshotResponse refreshRank(Player player) {
         String puuid = player.getPuuid();
 
-        // get latest match Ids from Riot
         RiotRankResponse riotRankResponse = refreshSoloDuoRank(puuid, player.getRegion())
                 .orElseThrow(() -> new SoloDuoRankNotFoundException(puuid));
 
-        // find which matches are already in DB
+        RankSnapshot savedRankSnapshot = new RankSnapshot(player, riotRankResponse);
+
+        savedRankSnapshot =
+                rankSnapshotRepository.save(savedRankSnapshot);
+
+        return new RankSnapshotResponse(savedRankSnapshot);
+    }
+
+    private List<PlayerMatchDataResponse> refreshMatches(Player player) {
+
+        String puuid = player.getPuuid();
         List<String> fetchedMatchIds = riotApiService.getMatchIds(puuid);
         List<Match> existingMatches =
                 matchRepository.findByRiotMatchIdIn(fetchedMatchIds);
@@ -407,7 +406,6 @@ public class PlayerService {
         List<Match> newMatches = new ArrayList<>();
 
         for (String matchId : fetchedMatchIds) {
-
             if (!existingMatchIds.contains(matchId)) {
 
                 MatchResponse matchResponse =
@@ -425,31 +423,7 @@ public class PlayerService {
         List<Match> allMatches = new ArrayList<>(existingMatches);
         allMatches.addAll(newMatches);
 
-        // find existing playerMatch relationships
-        List<PlayerMatch> existingPlayerMatches =
-                playerMatchRepository.findByPlayer(player);
-
-        Set<Long> linkedMatchIds = new HashSet<>();
-
-        for (PlayerMatch playerMatch : existingPlayerMatches) {
-            linkedMatchIds.add(
-                    playerMatch.getMatch().getId()
-            );
-        }
-
-        // create missing relationships
-        List<PlayerMatch> newPlayerMatches = new ArrayList<>();
-
-        for (Match match : allMatches) {
-
-            if (!linkedMatchIds.contains(match.getId())) {
-                newPlayerMatches.add(
-                        new PlayerMatch(player, match)
-                );
-            }
-        }
-
-        playerMatchRepository.saveAll(newPlayerMatches);
+        synchronizePlayerMatches(player, allMatches);
 
         // reload playerMatches
         List<PlayerMatch> playerMatches =
@@ -464,7 +438,6 @@ public class PlayerService {
                 new HashMap<>();
 
         for (PlayerMatch playerMatch : playerMatches) {
-
             playerMatchesById.put(
                     playerMatch.getMatch().getRiotMatchId(),
                     playerMatch
@@ -497,12 +470,47 @@ public class PlayerService {
             );
         }
 
-        // Build refreshed player response
-        PlayerResponse playerResponse = new PlayerResponse(player);
+        return matchResponses;
+    }
 
-        RankSnapshot savedRankSnapshot = new RankSnapshot(player, riotRankResponse);
-        rankSnapshotRepository.save(savedRankSnapshot);
-        RankSnapshotResponse refreshedRank = new RankSnapshotResponse(savedRankSnapshot);
+    private void synchronizePlayerMatches(Player player, List<Match> matches) {
+        // find existing playerMatch relationships
+        List<PlayerMatch> existingPlayerMatches =
+                playerMatchRepository.findByPlayer(player);
+
+        Set<Long> linkedMatchIds = new HashSet<>();
+
+        for (PlayerMatch playerMatch : existingPlayerMatches) {
+            linkedMatchIds.add(
+                    playerMatch.getMatch().getId()
+            );
+        }
+
+        // create missing relationships
+        List<PlayerMatch> newPlayerMatches = new ArrayList<>();
+
+        for (Match match : matches) {
+            if (!linkedMatchIds.contains(match.getId())) {
+                newPlayerMatches.add(
+                        new PlayerMatch(player, match)
+                );
+            }
+        }
+
+        playerMatchRepository.saveAll(newPlayerMatches);
+    }
+
+    @Transactional
+    public PlayerRefreshResponse refreshPlayerData(PlayerRequest playerRequest) {
+
+        // refresh rank
+        Player player = findPlayerByPlayerRequest(playerRequest);
+
+        RankSnapshotResponse refreshedRank = refreshRank(player);
+
+        List<PlayerMatchDataResponse> matchResponses = refreshMatches(player);
+
+        PlayerResponse playerResponse = new PlayerResponse(player);
 
         PlayerOverviewResponse playerOverviewResponse =
                 new PlayerOverviewResponse (
