@@ -150,26 +150,6 @@ public class PlayerService {
                 .findFirst();
     }
 
-    @Scheduled(fixedRate = 900000)
-    public void refreshAll() {
-        List<Player> players = playerRepository.findAll();
-        List<String> errors = new ArrayList<>();
-
-        for (Player player : players) {
-
-            try {
-                refreshPlayerData(new PlayerRequest(player));
-            } catch (Exception e) {
-                errors.add(
-                    player.getGameName() + "#" + player.getTagLine()
-                            + ": " + e.getMessage()
-                );
-            }
-        }
-
-        System.out.println("Errors when refreshing: " + errors);
-    }
-
     private int tierValue(String tier) {
         return switch (tier.toUpperCase()) {
             case "IRON" -> 1;
