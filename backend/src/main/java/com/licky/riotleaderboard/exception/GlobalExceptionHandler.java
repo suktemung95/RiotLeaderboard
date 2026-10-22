@@ -81,4 +81,16 @@ public class GlobalExceptionHandler extends RuntimeException {
                 null
         );
     }
+
+    @ExceptionHandler(RiotRateLimitException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRiotRateLimitExceededException(
+            RiotRateLimitException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.TOO_MANY_REQUESTS,
+                false,
+                ex.getMessage(),
+                null
+        );
+    }
 }

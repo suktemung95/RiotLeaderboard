@@ -4,6 +4,7 @@ import com.licky.riotleaderboard.dto.MatchResponse;
 import com.licky.riotleaderboard.dto.RiotAccountResponse;
 import com.licky.riotleaderboard.dto.RiotRankResponse;
 import com.licky.riotleaderboard.exception.InvalidRiotApiTokenException;
+import com.licky.riotleaderboard.exception.RiotRateLimitException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -70,6 +71,14 @@ public class RiotApiService {
                         (req, res) -> {
                             throw new InvalidRiotApiTokenException();
                         }
+                ).onStatus(
+                        status -> status.value() == 429,
+                        (req, res) -> {
+
+                            String retryAfter =
+                                    res.getHeaders().getFirst("Retry-After");
+                            throw new RiotRateLimitException(retryAfter);
+                        }
                 ).body(responseType);
     }
 
@@ -86,7 +95,19 @@ public class RiotApiService {
                         (req, res) -> {
                             throw new InvalidRiotApiTokenException();
                         }
-                ).body(responseType);
+                )
+
+                .onStatus(
+                        status -> status.value() == 429,
+                        (req, res) -> {
+
+                            String retryAfter =
+                                    res.getHeaders().getFirst("Retry-After");
+                            throw new RiotRateLimitException(retryAfter);
+                        }
+                )
+
+                .body(responseType);
     }
 
     private String regionToPlatform(String region) {
