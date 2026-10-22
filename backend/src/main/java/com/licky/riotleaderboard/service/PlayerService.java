@@ -12,11 +12,10 @@ import com.licky.riotleaderboard.repository.MatchRepository;
 import com.licky.riotleaderboard.repository.PlayerMatchRepository;
 import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
-import org.springframework.scheduling.annotation.Scheduled;
+import com.licky.riotleaderboard.riot.RiotApiService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service

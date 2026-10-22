@@ -1,4 +1,4 @@
-package com.licky.riotleaderboard.service;
+package com.licky.riotleaderboard.riot;
 
 import com.licky.riotleaderboard.dto.MatchResponse;
 import com.licky.riotleaderboard.dto.RiotAccountResponse;
@@ -15,11 +15,15 @@ import java.util.List;
 @Service
 public class RiotApiService {
 
+    private final RiotRateLimiter riotRateLimiter;
+
     private final RestClient restClient;
-    public RiotApiService(@Value("${riot.api.key}") String apiKey) {
+    public RiotApiService(@Value("${riot.api.key}") String apiKey, RiotRateLimiter riotRateLimiter) {
         this.restClient = RestClient.builder()
                 .defaultHeader("X-Riot-Token", apiKey)
                 .build();
+
+        this.riotRateLimiter = riotRateLimiter;
     }
 
     public RiotAccountResponse getAccount(String gameName, String tagLine) {
@@ -63,6 +67,7 @@ public class RiotApiService {
             Class<T> responseType,
             Object... uriVariables
     ) {
+        riotRateLimiter.acquire();
         return restClient.get()
                 .uri(uri, uriVariables)
                 .retrieve()
@@ -87,6 +92,8 @@ public class RiotApiService {
             ParameterizedTypeReference<T> responseType,
             Object... uriVariables
     ) {
+        riotRateLimiter.acquire();
+
         return restClient.get()
                 .uri(uri, uriVariables)
                 .retrieve()

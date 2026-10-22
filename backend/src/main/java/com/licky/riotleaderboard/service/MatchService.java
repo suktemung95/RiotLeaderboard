@@ -3,9 +3,9 @@ package com.licky.riotleaderboard.service;
 import com.licky.riotleaderboard.dto.MatchResponse;
 import com.licky.riotleaderboard.model.Match;
 import com.licky.riotleaderboard.repository.MatchRepository;
+import com.licky.riotleaderboard.riot.RiotApiService;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
