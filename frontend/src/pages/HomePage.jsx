@@ -30,7 +30,7 @@ export default function HomePage() {
             tagLine
         })
 
-        const url = URL_BASE + `players/search?${params}` 
+        const url = URL_BASE + `players/overview?${params}` 
         const response = await fetch(url)
         const result = await response.json()
         console.log(result)
