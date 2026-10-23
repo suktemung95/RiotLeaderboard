@@ -228,10 +228,24 @@ public class PlayerService {
         RiotRankResponse riotRankResponse = refreshSoloDuoRank(puuid, player.getRegion())
                 .orElseThrow(() -> new SoloDuoRankNotFoundException(puuid));
 
-        RankSnapshot savedRankSnapshot = new RankSnapshot(player, riotRankResponse);
+        RankSnapshot newRankSnapshot = new RankSnapshot(player, riotRankResponse);
 
-        savedRankSnapshot =
-                rankSnapshotRepository.save(savedRankSnapshot);
+        Optional<RankSnapshot> prevRankSnapshot = rankSnapshotRepository.findTopByPlayerOrderByRecordedAtDesc(player);
+
+        RankSnapshot savedRankSnapshot;
+
+        // if prev exists and not same rank
+        if (prevRankSnapshot.isEmpty() || !prevRankSnapshot.get().hasSameRank(newRankSnapshot)) {
+            savedRankSnapshot =
+                    rankSnapshotRepository.save(newRankSnapshot);
+        // if exists and same rank
+        } else {
+
+            RankSnapshot existingSnapshot = prevRankSnapshot.get();
+            existingSnapshot.setRecordedAt(LocalDateTime.now());
+            savedRankSnapshot =
+                    rankSnapshotRepository.save(existingSnapshot);
+        }
 
         return new RankSnapshotResponse(savedRankSnapshot);
     }
