@@ -41,7 +41,7 @@ public class PlayerController {
         );
     }
 
-    @GetMapping("/{id}/history")
+    @GetMapping("/history")
     public ResponseEntity<ApiResponse<List<RankSnapshotResponse>>> getPlayerHistory(
             @ModelAttribute PlayerRequest playerRequest
     ) {

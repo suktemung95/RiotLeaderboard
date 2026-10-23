@@ -119,9 +119,9 @@ public class PlayerService {
     public List<RankSnapshotResponse> getPlayerHistory(PlayerRequest pr) {
 
          Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
-                 pr.region(),
-                 pr.gameName(),
-                 pr.tagLine()
+                     pr.region(),
+                     pr.gameName(),
+                     pr.tagLine()
                  )
                  .orElseThrow(() -> new PlayerNotFoundByNameException(
                          pr.region(), pr.gameName(), pr.tagLine())
@@ -130,14 +130,7 @@ public class PlayerService {
          return rankSnapshotRepository
                  .findByPlayerOrderByRecordedAtDesc(player)
                  .stream()
-                 .map(s -> new RankSnapshotResponse(
-                         s.getTier(),
-                         s.getRank(),
-                         s.getLeaguePoints(),
-                         s.getWins(),
-                         s.getLosses(),
-                         s.getRecordedAt()
-                 ))
+                 .map(RankSnapshotResponse::new)
                  .toList();
     }
 

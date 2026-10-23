@@ -1,5 +1,5 @@
 # current
-- RATE LIMITING
+- rank history graph
 
 # next (top to bottom)
 - caching players
@@ -7,7 +7,12 @@
   - on this note, make sure the database or even cache returns, then somehow make an API refresh
 - if a call is taken from database, do an async refresh from the API directly afterward
 - figure out a way to fix N + 1 in getPlayerMatches and getPlayerMatchesDetails
-- possibly remove (or create new + smaller) DTO for Participants that doesn't include user information (unnecessary)
+- possibly remove (or create new + smaller) DTO for Participants that doesn't include user information (unnecessary)'
+- pagination on matches
+- match details
+- testing
+- deployment
+- CI CD
 
 # Done (old to new)
 - refreshPlayer + Matches
@@ -22,3 +27,4 @@
 - clean up unnecessary functions in PlayerController + Service
     - already done with constructors (converting types)
 - divide refresh function into multiple helpers
+- RATE LIMITING
