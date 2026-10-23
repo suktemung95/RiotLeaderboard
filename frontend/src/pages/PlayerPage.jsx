@@ -2,6 +2,16 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from 'react'
 import "./PlayerPage.css";
 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from "recharts";
+
 const URL_BASE = "http://localhost:8080/"
 
 const DDRAGON_VERSION = "16.20.1";
@@ -10,6 +20,7 @@ export default function PlayerPage() {
 
   const [matches, setMatches] = useState([]);
   const [player, setPlayer] = useState(null);
+  const [rankHistory, setRankHistory] = useState([])
   const [refreshing, setRefreshing] = useState(false);
 
   const { region, gameName, tagLine } = useParams();
@@ -101,6 +112,61 @@ export default function PlayerPage() {
     }
   }
 
+  function rankToValue(tier, rank, lp) {
+    const tierValues = {
+      IRON: 0,
+      BRONZE: 400,
+      SILVER: 800,
+      GOLD: 1200,
+      PLATINUM: 1600,
+      EMERALD: 2000,
+      DIAMOND: 2400,
+      MASTER: 2800,
+      GRANDMASTER: 3200,
+      CHALLENGER: 3600
+    };
+
+    const rankValues = {
+      IV: 0,
+      III: 100,
+      II: 200,
+      I: 300
+    };
+
+    return (
+      (tierValues[tier] ?? 0) +
+      (rankValues[rank] ?? 0) +
+      lp
+    );
+  }
+
+  function valueToRankLabel(value) {
+    const tiers = [
+      "Iron",
+      "Bronze",
+      "Silver",
+      "Gold",
+      "Platinum",
+      "Emerald",
+      "Diamond"
+    ];
+
+    const tierIndex = Math.floor(value / 400);
+
+    if (tierIndex >= tiers.length) {
+      if (value >= 3600) return "Challenger";
+      if (value >= 3200) return "Grandmaster";
+      return "Master";
+    }
+
+    const withinTier = value % 400;
+    const divisionIndex = Math.floor(withinTier / 100);
+
+    const divisions = ["IV", "III", "II", "I"];
+
+    return `${tiers[tierIndex]} ${divisions[divisionIndex]}`;
+  }
+
   async function refreshPlayer() {
 
     try {
@@ -141,24 +207,53 @@ export default function PlayerPage() {
 
       const overviewUrl = URL_BASE + `players/overview?${params}`;
       const matchesUrl = URL_BASE + `players/matches?${params}`;
+      const rankHistoryUrl = URL_BASE + `players/history?${params}`;
 
-      const [overviewResponse, matchesResponse] = await Promise.all([
+      const [overviewResponse, matchesResponse, rankHistoryResponse] = await Promise.all([
         fetch(overviewUrl),
-        fetch(matchesUrl)
+        fetch(matchesUrl),
+        fetch(rankHistoryUrl)
       ]);
 
       const overviewResult = await overviewResponse.json();
       const matchesResult = await matchesResponse.json();
+      const rankHistoryResult = await rankHistoryResponse.json();
 
-      console.log(overviewResult);
-      console.log(matchesResult);
+      console.log("Overview: ", overviewResult);
+      console.log("Matches: ", matchesResult);
+      console.log("Rank history:", rankHistoryResult);
 
-      setPlayer(overviewResult.data)
+      setPlayer(overviewResult.data);
       setMatches(matchesResult.data);
+      setRankHistory(rankHistoryResult.data);
     }
 
     fetchData();
   }, [region, gameName, tagLine]);
+
+  const graphData = [...rankHistory]
+    .sort(
+      (a, b) =>
+        new Date(a.recordedAt) - new Date(b.recordedAt)
+    )
+    .map((snapshot, index) => ({
+      ...snapshot,
+
+      game: index + 1,
+
+      rankValue: rankToValue(
+        snapshot.tier,
+        snapshot.rank,
+        snapshot.leaguePoints
+      ),
+
+      dateLabel: new Date(snapshot.recordedAt).toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      })
+    }));
 
   return (
     <div className="player-page">
@@ -436,8 +531,47 @@ export default function PlayerPage() {
                 <button className="small-button">View all</button>
               </div>
 
-              <div className="chart-placeholder">
-                <span>Rank history graph</span>
+              <div className="rank-history-chart">
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={graphData}>
+
+                    <XAxis
+                      dataKey="game"
+                    />
+
+                    <YAxis
+                      domain={[
+                        dataMin => Math.floor((dataMin - 100) / 100) * 100,
+                        dataMax => Math.ceil((dataMax + 100) / 100) * 100
+                      ]}
+                      tickFormatter={valueToRankLabel}
+                    />
+
+                    <Tooltip
+                      labelFormatter={(game, payload) => {
+                        if (!payload?.length) return `Game ${game}`;
+
+                        return `Game ${game} · ${payload[0].payload.dateLabel}`;
+                      }}
+
+                      formatter={(value, name, props) => {
+                        const snapshot = props.payload;
+
+                        return [
+                          `${snapshot.tier} ${snapshot.rank} - ${snapshot.leaguePoints} LP`,
+                          "Rank"
+                        ];
+                      }}
+                    />
+
+                    <Line
+                      type="monotone"
+                      dataKey="rankValue"
+                      strokeWidth={2}
+                    />
+
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
