@@ -189,7 +189,11 @@ public class PlayerService {
 
         RankSnapshot rs = rankSnapshotRepository
                 .findTopByPlayerOrderByRecordedAtDesc(p)
-                .orElseThrow(() -> new RankSnapshotNotFoundException(p.getId()));
+                .orElseThrow(() -> new RankSnapshotNotFoundException(
+                        p.getGameName(),
+                        p.getTagLine(),
+                        p.getRegion()
+                ));
 
         PlayerResponse pr = new PlayerResponse(p);
         RankSnapshotResponse rsr = new RankSnapshotResponse(rs);
@@ -342,7 +346,12 @@ public class PlayerService {
 
         // find their most recently refreshed time
         LocalDateTime prevRefresh = rankSnapshotRepository.findTopByPlayerOrderByRecordedAtDesc(player).orElseThrow(
-                () -> new RankSnapshotNotFoundException(player.getId()))
+                () -> new RankSnapshotNotFoundException(
+                        player.getGameName(),
+                        player.getTagLine(),
+                        player.getRegion()
+                )
+                )
                 .getRecordedAt();
 
         LocalDateTime cutoff = LocalDateTime.now().minusSeconds(30);
