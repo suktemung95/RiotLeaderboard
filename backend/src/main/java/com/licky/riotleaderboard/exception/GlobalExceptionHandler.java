@@ -93,4 +93,16 @@ public class GlobalExceptionHandler extends RuntimeException {
                 null
         );
     }
+
+    @ExceptionHandler(RefreshCooldownException.class)
+    public ResponseEntity<ApiResponse<Void>> handleRefreshCooldownException(
+            RefreshCooldownException ex
+    ) {
+        return ApiResponses.build(
+                HttpStatus.TOO_MANY_REQUESTS,
+                false,
+                ex.getMessage(),
+                null
+        );
+    }
 }

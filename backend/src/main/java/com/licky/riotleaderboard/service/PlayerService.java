@@ -3,6 +3,7 @@ package com.licky.riotleaderboard.service;
 import com.licky.riotleaderboard.dto.*;
 import com.licky.riotleaderboard.exception.PlayerNotFoundByNameException;
 import com.licky.riotleaderboard.exception.RankSnapshotNotFoundException;
+import com.licky.riotleaderboard.exception.RefreshCooldownException;
 import com.licky.riotleaderboard.exception.SoloDuoRankNotFoundException;
 import com.licky.riotleaderboard.model.Match;
 import com.licky.riotleaderboard.model.Player;
@@ -16,6 +17,7 @@ import com.licky.riotleaderboard.riot.RiotApiService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -337,6 +339,17 @@ public class PlayerService {
 
         // refresh rank
         Player player = findPlayerByPlayerRequest(playerRequest);
+
+        // find their most recently refreshed time
+        LocalDateTime prevRefresh = rankSnapshotRepository.findTopByPlayerOrderByRecordedAtDesc(player).orElseThrow(
+                () -> new RankSnapshotNotFoundException(player.getId()))
+                .getRecordedAt();
+
+        LocalDateTime cutoff = LocalDateTime.now().minusSeconds(30);
+
+        if (prevRefresh.isAfter(cutoff)) {
+            throw new RefreshCooldownException(player);
+        }
 
         RankSnapshotResponse refreshedRank = refreshRank(player);
 
