@@ -14,6 +14,7 @@ import com.licky.riotleaderboard.repository.PlayerMatchRepository;
 import com.licky.riotleaderboard.repository.PlayerRepository;
 import com.licky.riotleaderboard.repository.RankSnapshotRepository;
 import com.licky.riotleaderboard.riot.RiotApiService;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,19 +29,22 @@ public class PlayerService {
     private final PlayerMatchRepository playerMatchRepository;
     private final RankSnapshotRepository rankSnapshotRepository;
     private final RiotApiService riotApiService;
+    private final TaskExecutor taskExecutor;
 
     public PlayerService(
             PlayerRepository playerRepository,
             MatchRepository matchRepository,
             PlayerMatchRepository playerMatchRepository,
             RankSnapshotRepository rankSnapshotRepository,
-            RiotApiService riotApiService
+            RiotApiService riotApiService,
+            TaskExecutor taskExecutor
     ) {
         this.playerRepository = playerRepository;
         this.matchRepository = matchRepository;
         this.playerMatchRepository = playerMatchRepository;
         this.rankSnapshotRepository = rankSnapshotRepository;
         this.riotApiService = riotApiService;
+        this.taskExecutor = taskExecutor;
     }
 
     public Player addPlayer(PlayerResponse request) {
@@ -117,21 +121,26 @@ public class PlayerService {
     }
 
     public List<RankSnapshotResponse> getPlayerHistory(PlayerRequest pr) {
+        Player player = findPlayerByPlayerRequest(pr);
 
-         Player player = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
-                     pr.region(),
-                     pr.gameName(),
-                     pr.tagLine()
-                 )
-                 .orElseThrow(() -> new PlayerNotFoundByNameException(
-                         pr.region(), pr.gameName(), pr.tagLine())
-                 );
+        List<RankSnapshot> rankHistory = rankSnapshotRepository
+                 .findByPlayerOrderByRecordedAtDesc(player);
 
-         return rankSnapshotRepository
-                 .findByPlayerOrderByRecordedAtDesc(player)
-                 .stream()
-                 .map(RankSnapshotResponse::new)
-                 .toList();
+        if (rankHistory.isEmpty()) {
+            taskExecutor.execute(() -> refreshRank(player));
+            return List.of();
+        }
+
+        if (rankHistory.getFirst()
+                .getRecordedAt()
+                .isBefore(LocalDateTime.now().minusMinutes(30))) {
+
+            taskExecutor.execute(() -> refreshRank(player));
+        }
+
+        return rankHistory.stream()
+                .map(RankSnapshotResponse::new)
+                .toList();
     }
 
     private Optional<RiotRankResponse> refreshSoloDuoRank(String puuid, String region) {
