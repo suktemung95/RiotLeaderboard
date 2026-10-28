@@ -263,7 +263,6 @@ export default function PlayerPage() {
       console.log("Rank history:", rankHistoryResult);
 
       setPlayer(overviewResult.data);
-      setMatches(matchesResult.data);
       setMatches(matchesResult.data.items);
       setOldestMatchCursor(matchesResult.data.nextCursor);
       setHasMore(matchesResult.data.hasMore);
