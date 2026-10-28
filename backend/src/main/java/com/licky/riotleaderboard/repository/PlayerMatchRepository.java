@@ -25,8 +25,8 @@ public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, Player
             Player player,
             List<String> riotMatchIds
     );
-    List<PlayerMatch> findTop20ByPlayerAndMatch_GameStartTimestampBeforeOrderByMatch_GameStartTimestampDesc(
+    List<PlayerMatch> findTop20ByPlayerAndMatch_GameStartTimestampLessThanOrderByMatch_GameStartTimestampDesc(
             Player player,
-            LocalDateTime before
+            Long before
     );
 }

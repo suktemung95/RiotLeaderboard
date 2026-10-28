@@ -203,7 +203,7 @@ public class PlayerService {
         return new PlayerOverviewResponse(pr, rsr);
     }
 
-    public List<PlayerMatchDataResponse> getPlayerMatches(PlayerRequest playerRequest, LocalDateTime before) {
+    public List<PlayerMatchDataResponse> getPlayerMatches(PlayerRequest playerRequest, Long before) {
 
         Player player = findPlayerByPlayerRequest(playerRequest);
 
@@ -216,7 +216,7 @@ public class PlayerService {
         } else {
             playerMatches =
                     playerMatchRepository
-                            .findTop20ByPlayerAndMatch_GameStartTimestampBeforeOrderByMatch_GameStartTimestampDesc(
+                            .findTop20ByPlayerAndMatch_GameStartTimestampLessThanOrderByMatch_GameStartTimestampDesc(
                                     player,
                                     before
                             );

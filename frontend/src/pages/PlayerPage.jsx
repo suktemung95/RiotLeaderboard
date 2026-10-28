@@ -196,6 +196,34 @@ export default function PlayerPage() {
       setRefreshing(false)
     }
   }
+
+  async function loadMoreMatches() {
+    if (matches.length === 0) return;
+
+    const oldestMatch = matches[matches.length - 1];
+
+    const params = new URLSearchParams({
+      region,
+      gameName,
+      tagLine,
+      before: oldestMatch.info.gameStartTimestamp
+    });
+
+    const response = await fetch(
+      URL_BASE + `players/matches?${params}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to load more matches");
+    }
+
+    const result = await response.json();
+
+    setMatches(previousMatches => [
+      ...previousMatches,
+      ...result.data
+    ]);
+  }
   
   useEffect(() => {
     async function fetchData() {
@@ -359,8 +387,6 @@ export default function PlayerPage() {
                 <span className="card-label">MATCH HISTORY</span>
                 <h3>Recent matches</h3>
               </div>
-
-              <button className="small-button">View all</button>
             </div>
 
             <div className="match-list">
@@ -474,6 +500,13 @@ export default function PlayerPage() {
                 );
               })}
             </div>
+
+            <button
+                className="small-button"
+                onClick={loadMoreMatches}
+              >
+                Load more
+              </button>
           </div>
 
           <div className="side-column">

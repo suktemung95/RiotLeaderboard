@@ -79,7 +79,7 @@ public class PlayerController {
     @GetMapping("/matches")
     public ResponseEntity<ApiResponse<List<PlayerMatchDataResponse>>> getPlayerMatches(
             @ModelAttribute PlayerRequest playerRequest,
-            @RequestParam(required = false) LocalDateTime before
+            @RequestParam(required = false) Long before
     ) {
         return ApiResponses.build(
                 HttpStatus.OK,
