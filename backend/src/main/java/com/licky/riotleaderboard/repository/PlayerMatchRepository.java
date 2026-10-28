@@ -11,21 +11,13 @@ import java.util.List;
 
 public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, PlayerMatchId> {
     List<PlayerMatch> findByPlayer(Player player);
-    List<PlayerMatch> findByPlayer_GameNameIgnoreCaseAndPlayer_TagLineIgnoreCaseAndPlayer_RegionIgnoreCaseAndMatch_RiotMatchIdIn(
-            String gamename,
-            String tagLine,
-            String region,
-            List<String> matchIds
-    );
-
-    List<PlayerMatch> findByPlayerAndMatch_RiotMatchIdIn(Player player, List<String> matchIds);
-    List<PlayerMatch> findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(Player player);
+    List<PlayerMatch> findTop21ByPlayerOrderByMatch_GameStartTimestampDesc(Player player);
     List<PlayerMatch>
     findByPlayerAndMatch_RiotMatchIdInOrderByMatch_GameStartTimestampDesc(
             Player player,
             List<String> riotMatchIds
     );
-    List<PlayerMatch> findTop20ByPlayerAndMatch_GameStartTimestampLessThanOrderByMatch_GameStartTimestampDesc(
+    List<PlayerMatch> findTop21ByPlayerAndMatch_GameStartTimestampLessThanOrderByMatch_GameStartTimestampDesc(
             Player player,
             Long before
     );

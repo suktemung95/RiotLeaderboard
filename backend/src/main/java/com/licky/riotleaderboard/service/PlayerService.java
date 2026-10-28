@@ -212,11 +212,11 @@ public class PlayerService {
         if (before == null) {
             playerMatches =
                     playerMatchRepository
-                            .findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(player);
+                            .findTop21ByPlayerOrderByMatch_GameStartTimestampDesc(player);
         } else {
             playerMatches =
                     playerMatchRepository
-                            .findTop20ByPlayerAndMatch_GameStartTimestampLessThanOrderByMatch_GameStartTimestampDesc(
+                            .findTop21ByPlayerAndMatch_GameStartTimestampLessThanOrderByMatch_GameStartTimestampDesc(
                                     player,
                                     before
                             );

@@ -77,15 +77,29 @@ public class PlayerController {
     }
 
     @GetMapping("/matches")
-    public ResponseEntity<ApiResponse<List<PlayerMatchDataResponse>>> getPlayerMatches(
+    public ResponseEntity<ApiResponse<PaginatedResponse<PlayerMatchDataResponse>>> getPlayerMatches(
             @ModelAttribute PlayerRequest playerRequest,
             @RequestParam(required = false) Long before
     ) {
+
+        List<PlayerMatchDataResponse> matches = playerService.getPlayerMatches(playerRequest, before);
+        boolean hasNext = matches.size() > 20;
+
+        List<PlayerMatchDataResponse> returnedMatches =
+                hasNext
+                        ? matches.subList(0, 20)
+                        : matches;
+        
+        Long nextCursor = returnedMatches.isEmpty()
+                ? null
+                : returnedMatches.getLast().info().gameStartTimestamp();
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
                 "Player matches returned successfully",
-                playerService.getPlayerMatches(playerRequest, before)
+                new PaginatedResponse<>(
+                        returnedMatches, nextCursor, hasNext
+                )
         );
     }
 
