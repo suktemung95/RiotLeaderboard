@@ -15,8 +15,16 @@ public class Player {
     private String region;
     @Column(unique = true, nullable = false)
     private String puuid;
-
+    private LocalDateTime lastRefreshedAt;
     private LocalDateTime matchesLastRefreshedAt;
+
+    public LocalDateTime getLastRefreshedAt() {
+        return lastRefreshedAt;
+    }
+
+    public void setLastRefreshedAt(LocalDateTime lastRefreshedAt) {
+        this.lastRefreshedAt = lastRefreshedAt;
+    }
 
     public LocalDateTime getMatchesLastRefreshedAt() {
         return matchesLastRefreshedAt;

@@ -364,26 +364,15 @@ public class PlayerService {
         // refresh rank
         Player player = findPlayerByPlayerRequest(playerRequest);
 
-        // find their most recently refreshed time
-        LocalDateTime prevRefresh = rankSnapshotRepository.findTopByPlayerOrderByRecordedAtDesc(player).orElseThrow(
-                () -> new RankSnapshotNotFoundException(
-                        player.getGameName(),
-                        player.getTagLine(),
-                        player.getRegion()
-                )
-                )
-                .getRecordedAt();
-
         LocalDateTime cutoff = LocalDateTime.now().minusSeconds(30);
 
-        if (prevRefresh.isAfter(cutoff)) {
+        if (player.getLastRefreshedAt() != null
+                && player.getLastRefreshedAt().isAfter(cutoff)) {
             throw new RefreshCooldownException(player);
         }
 
         RankSnapshotResponse refreshedRank = refreshRank(player);
-
         List<PlayerMatchDataResponse> matchResponses = refreshMatches(player);
-
         PlayerResponse playerResponse = new PlayerResponse(player);
 
         PlayerOverviewResponse playerOverviewResponse =
@@ -391,6 +380,9 @@ public class PlayerService {
                         playerResponse,
                         refreshedRank
                 );
+
+        player.setLastRefreshedAt(LocalDateTime.now());
+        playerRepository.save(player);
 
         // Return everything to frontend
         return new PlayerRefreshResponse(
