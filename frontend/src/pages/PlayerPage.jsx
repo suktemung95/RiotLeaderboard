@@ -21,6 +21,9 @@ export default function PlayerPage() {
   const [player, setPlayer] = useState(null);
   const [rankHistory, setRankHistory] = useState([])
   const [refreshing, setRefreshing] = useState(false);
+  const [oldestMatchCursor, setOldestMatchCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const { region, gameName, tagLine } = useParams();
 
@@ -190,38 +193,47 @@ export default function PlayerPage() {
       const result = await response.json();
 
       setPlayer(result.data.playerOverview);
-      setMatches(result.data.matchesData);
+      setMatches(result.data.matchesData.items);
+      setOldestMatchCursor(result.data.matchesData.nextCursor);
+      setHasMore(result.data.matchesData.hasMore);
     } finally {
       setRefreshing(false)
     }
   }
 
   async function loadMoreMatches() {
-    if (matches.length === 0) return;
+    if (oldestMatchCursor == null) return;
 
-    const oldestMatch = matches[matches.length - 1];
+    try {
+      setLoadingMore(true);
 
-    const params = new URLSearchParams({
-      region,
-      gameName,
-      tagLine,
-      before: oldestMatch.info.gameStartTimestamp
-    });
+      const params = new URLSearchParams({
+        region,
+        gameName,
+        tagLine,
+        before: oldestMatchCursor
+      });
 
-    const response = await fetch(
-      URL_BASE + `players/matches?${params}`
-    );
+      const response = await fetch(
+        URL_BASE + `players/matches?${params}`
+      );
 
-    if (!response.ok) {
-      throw new Error("Failed to load more matches");
-    }
+      if (!response.ok) {
+        throw new Error("Failed to load more matches");
+      }
 
-    const result = await response.json();
+      const result = await response.json();
 
-    setMatches(previousMatches => [
-      ...previousMatches,
-      ...result.data
-    ]);
+      setMatches(previousMatches => [
+        ...previousMatches,
+        ...result.data.items
+      ]);
+
+      setOldestMatchCursor(result.data.nextCursor)
+      setHasMore(result.data.hasMore)
+      } finally {
+        setLoadingMore(false);
+      }
   }
   
   useEffect(() => {
@@ -252,6 +264,9 @@ export default function PlayerPage() {
 
       setPlayer(overviewResult.data);
       setMatches(matchesResult.data);
+      setMatches(matchesResult.data.items);
+      setOldestMatchCursor(matchesResult.data.nextCursor);
+      setHasMore(matchesResult.data.hasMore);
       setRankHistory(rankHistoryResult.data);
     }
 
@@ -500,12 +515,15 @@ export default function PlayerPage() {
               })}
             </div>
 
-            <button
+            {hasMore ? 
+              <button
                 className="small-button"
                 onClick={loadMoreMatches}
+                disabled={loadingMore}
               >
-                Load more
-              </button>
+                {loadingMore ? "Loading..." : "Load more"}
+              </button> : null
+            }
           </div>
 
           <div className="side-column">
