@@ -47,16 +47,18 @@ public class PlayerService {
         this.taskExecutor = taskExecutor;
     }
 
-    public Player addPlayer(PlayerResponse request) {
+    public AddPlayerResult addPlayer(PlayerResponse request) {
         RiotAccountResponse riotAccount =
                 riotApiService.getAccount(request.gameName(), request.tagLine());
 
         Player player;
+        boolean exists = false;
 
         Optional<Player> optionalPlayer = playerRepository.findByPuuid(riotAccount.puuid());
 
         if ( optionalPlayer.isPresent() ) {
             player = optionalPlayer.get();
+            exists = true;
         } else {
             player = new Player();
             player.setPuuid(riotAccount.puuid());
@@ -74,7 +76,7 @@ public class PlayerService {
                     rankSnapshotRepository.save(new RankSnapshot(savedPlayer, rank))
             );
 
-        return savedPlayer;
+        return new AddPlayerResult(savedPlayer, exists);
     }
 
     public List<PlayerRankResponse> getLeaderboard() {

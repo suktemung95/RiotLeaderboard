@@ -23,11 +23,21 @@ public class PlayerController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<Player>> addPlayer(@RequestBody PlayerResponse request) {
+        AddPlayerResult apr = playerService.addPlayer(request);
+
+        if (apr.alreadyExists()) {
+            return ApiResponses.build(
+                    HttpStatus.OK,
+                    true,
+                    "Player already exists",
+                    apr.player()
+            );
+        }
         return ApiResponses.build(
-                HttpStatus.OK,
+                HttpStatus.CREATED,
                 true,
                 "Added player",
-                playerService.addPlayer(request)
+                apr.player()
         );
     }
 

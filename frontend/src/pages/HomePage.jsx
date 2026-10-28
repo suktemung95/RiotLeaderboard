@@ -24,19 +24,26 @@ export default function HomePage() {
         return
         }
 
-        const params = new URLSearchParams({
-            region,
-            gameName,
-            tagLine
-        })
+        const url = URL_BASE + "players";
 
-        const url = URL_BASE + `players/overview?${params}` 
-        const response = await fetch(url)
-        const result = await response.json()
-        console.log(result)
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                region,
+                gameName,
+                tagLine
+            })
+        });
+
+        const result = await response.json();
+
+        console.log(result);
 
         if (result.success) {
-            navigate(`/players/${region}/${gameName}/${tagLine}`)
+        navigate(`/players/${region}/${gameName}/${tagLine}`);
         }
     }
 
