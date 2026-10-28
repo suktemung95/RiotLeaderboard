@@ -2,6 +2,8 @@ package com.licky.riotleaderboard.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "players")
 public class Player {
@@ -13,6 +15,16 @@ public class Player {
     private String region;
     @Column(unique = true, nullable = false)
     private String puuid;
+
+    private LocalDateTime matchesLastRefreshedAt;
+
+    public LocalDateTime getMatchesLastRefreshedAt() {
+        return matchesLastRefreshedAt;
+    }
+
+    public void setMatchesLastRefreshedAt(LocalDateTime matchesLastRefreshedAt) {
+        this.matchesLastRefreshedAt = matchesLastRefreshedAt;
+    }
 
     public void setGameName(String gameName) {
         this.gameName = gameName;

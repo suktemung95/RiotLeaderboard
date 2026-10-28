@@ -182,13 +182,7 @@ public class PlayerService {
     public PlayerOverviewResponse getPlayerOverview(
             PlayerRequest playerRequest
     ) {
-        Player p = playerRepository.findByRegionIgnoreCaseAndGameNameIgnoreCaseAndTagLineIgnoreCase(
-                playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
-        )
-                .orElseThrow(() -> new PlayerNotFoundByNameException(
-                        playerRequest.region(), playerRequest.gameName(), playerRequest.tagLine()
-                ));
-
+        Player p = findPlayerByPlayerRequest(playerRequest);
         RankSnapshot rs = rankSnapshotRepository
                 .findTopByPlayerOrderByRecordedAtDesc(p)
                 .orElseThrow(() -> new RankSnapshotNotFoundException(
@@ -197,11 +191,14 @@ public class PlayerService {
                         p.getRegion()
                 ));
 
+        if (rs.getRecordedAt().isBefore(LocalDateTime.now().minusMinutes(30)) ) {
+            taskExecutor.execute(() -> refreshRank(p));
+        }
+
         PlayerResponse pr = new PlayerResponse(p);
         RankSnapshotResponse rsr = new RankSnapshotResponse(rs);
 
         return new PlayerOverviewResponse(pr, rsr);
-
     }
 
     public List<PlayerMatchDataResponse> getPlayerMatches(PlayerRequest playerRequest) {
@@ -211,8 +208,12 @@ public class PlayerService {
         List<PlayerMatch> playerMatches =
                 playerMatchRepository.findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(player);
 
-        if (playerMatches.size() < 20) {
-            return refreshMatches(player);
+        LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
+
+        if (player.getMatchesLastRefreshedAt() == null
+                || player.getMatchesLastRefreshedAt().isBefore(cutoff)) {
+
+            taskExecutor.execute(() -> refreshMatches(player));
         }
 
         return playerMatchesToDataResponse(playerMatches);
@@ -300,6 +301,9 @@ public class PlayerService {
                     player,
                     fetchedMatchIds
             );
+
+        player.setMatchesLastRefreshedAt(LocalDateTime.now());
+        playerRepository.save(player);
 
         return playerMatchesToDataResponse(playerMatches);
     }
