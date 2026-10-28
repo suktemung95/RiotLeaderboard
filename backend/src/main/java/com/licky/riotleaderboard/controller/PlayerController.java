@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -77,13 +78,14 @@ public class PlayerController {
 
     @GetMapping("/matches")
     public ResponseEntity<ApiResponse<List<PlayerMatchDataResponse>>> getPlayerMatches(
-            @ModelAttribute PlayerRequest playerRequest
+            @ModelAttribute PlayerRequest playerRequest,
+            @RequestParam(required = false) LocalDateTime before
     ) {
         return ApiResponses.build(
                 HttpStatus.OK,
                 true,
                 "Player matches returned successfully",
-                playerService.getPlayerMatches(playerRequest)
+                playerService.getPlayerMatches(playerRequest, before)
         );
     }
 

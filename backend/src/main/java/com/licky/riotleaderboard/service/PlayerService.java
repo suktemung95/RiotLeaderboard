@@ -203,12 +203,25 @@ public class PlayerService {
         return new PlayerOverviewResponse(pr, rsr);
     }
 
-    public List<PlayerMatchDataResponse> getPlayerMatches(PlayerRequest playerRequest) {
+    public List<PlayerMatchDataResponse> getPlayerMatches(PlayerRequest playerRequest, LocalDateTime before) {
 
         Player player = findPlayerByPlayerRequest(playerRequest);
 
-        List<PlayerMatch> playerMatches =
-                playerMatchRepository.findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(player);
+        List<PlayerMatch> playerMatches;
+
+        if (before == null) {
+            playerMatches =
+                    playerMatchRepository
+                            .findTop20ByPlayerOrderByMatch_GameStartTimestampDesc(player);
+        } else {
+            playerMatches =
+                    playerMatchRepository
+                            .findTop20ByPlayerAndMatch_GameStartTimestampBeforeOrderByMatch_GameStartTimestampDesc(
+                                    player,
+                                    before
+                            );
+        }
+
 
         LocalDateTime cutoff = LocalDateTime.now().minusMinutes(30);
 

@@ -6,6 +6,7 @@ import com.licky.riotleaderboard.model.PlayerMatch;
 import com.licky.riotleaderboard.model.PlayerMatchId;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, PlayerMatchId> {
@@ -23,5 +24,9 @@ public interface PlayerMatchRepository extends JpaRepository<PlayerMatch, Player
     findByPlayerAndMatch_RiotMatchIdInOrderByMatch_GameStartTimestampDesc(
             Player player,
             List<String> riotMatchIds
+    );
+    List<PlayerMatch> findTop20ByPlayerAndMatch_GameStartTimestampBeforeOrderByMatch_GameStartTimestampDesc(
+            Player player,
+            LocalDateTime before
     );
 }
