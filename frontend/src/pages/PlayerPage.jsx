@@ -11,7 +11,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 
-const URL_BASE = "http://localhost:8080/"
+const URL_BASE = import.meta.env.VITE_API_URL;
 
 const DDRAGON_VERSION = "16.20.1";
 
