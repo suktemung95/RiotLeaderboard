@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const URL_BASE = "http://localhost:8080/"
+const URL_BASE = import.meta.env.VITE_API_URL;
 
 export default function HomePage() {
     const [region, setRegion] = useState("NA");
